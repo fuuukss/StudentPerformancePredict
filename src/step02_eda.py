@@ -8,8 +8,8 @@ import pandas as pd
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "student-por.csv"
-GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs"
+GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step02_eda"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step02_eda"
 
 EDA_REPORT_PATH = LOGS_DIR / "eda_report.csv"
 

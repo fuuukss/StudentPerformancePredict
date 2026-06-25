@@ -9,7 +9,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "student-por.csv"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step01_data_preparation"
 
 DATASET_OVERVIEW_PATH = LOGS_DIR / "dataset_overview.csv"
 FEATURES_OVERVIEW_PATH = LOGS_DIR / "features_overview.csv"
