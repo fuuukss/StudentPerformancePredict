@@ -1,0 +1,17 @@
+Opis,Vrednost
+Broj redova,649
+Broj kolona,33
+Broj duplikata,0
+Ukupan broj nedostajućih vrednosti,0
+Broj numeričkih kolona,16
+Broj kategorijskih kolona,17
+Minimalna završna ocena G3,0
+Maksimalna završna ocena G3,19
+Prosečna završna ocena G3,11.91
+Prosečna ocena G1,11.40
+Prosečna ocena G2,11.57
+Minimalna ocena G1,0
+Minimalna ocena G2,0
+Maksimalna ocena G1,19
+Maksimalna ocena G2,19
+Zaključak,Dataset nema nedostajuće vrednosti i duplikate. G1 i G2 će biti posebno analizirani jer predstavljaju prethodne ocene i očekivano su povezani sa G3.
