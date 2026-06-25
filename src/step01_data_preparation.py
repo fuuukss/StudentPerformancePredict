@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -7,12 +6,6 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 # Podešavanje UTF-8 ispisa je korisno na Windows konzolama.
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except AttributeError:
-    pass
-
-
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "student-por.csv"

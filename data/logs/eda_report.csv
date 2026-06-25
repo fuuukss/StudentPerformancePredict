@@ -1,0 +1,16 @@
+﻿Opis,Vrednost
+Broj učenika,649
+Minimalna G3 ocena,0
+Maksimalna G3 ocena,19
+Prosečna G3 ocena,11.91
+Broj učenika sa G3 = 0,15
+Procenat učenika sa G3 = 0,2.31
+Korelacija G1 i G3,0.83
+Korelacija G2 i G3,0.92
+Korelacija G1 i G2,0.86
+Korelacija failures i G3,-0.39
+Korelacija studytime i G3,0.25
+Korelacija absences i G3,-0.09
+Najjača korelacija sa G3,G2 (0.92)
+Maksimalan broj izostanaka,32
+Zaključak,"EDA pokazuje da su G1 i G2 najjače povezani sa završnom ocenom G3, zbog čega je opravdano porediti modele sa i bez ovih atributa. Vrednosti G3 = 0 i veći broj izostanaka se za sada ne brišu jer mogu predstavljati realne slučajeve u dataset-u."
