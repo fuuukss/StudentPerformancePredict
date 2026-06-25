@@ -1,0 +1,34 @@
+﻿column,dtype,feature_type,missing_values,unique_count,unique_values,used_with_G1_G2,used_without_G1_G2,note
+school,str,categorical,0,2,GP; MS,Da,Da,input feature
+sex,str,categorical,0,2,F; M,Da,Da,input feature
+age,int64,numeric,0,8,numeric,Da,Da,input feature
+address,str,categorical,0,2,R; U,Da,Da,input feature
+famsize,str,categorical,0,2,GT3; LE3,Da,Da,input feature
+Pstatus,str,categorical,0,2,A; T,Da,Da,input feature
+Medu,int64,numeric,0,5,numeric,Da,Da,input feature
+Fedu,int64,numeric,0,5,numeric,Da,Da,input feature
+Mjob,str,categorical,0,5,at_home; health; other; services; teacher,Da,Da,input feature
+Fjob,str,categorical,0,5,at_home; health; other; services; teacher,Da,Da,input feature
+reason,str,categorical,0,4,course; home; other; reputation,Da,Da,input feature
+guardian,str,categorical,0,3,father; mother; other,Da,Da,input feature
+traveltime,int64,numeric,0,4,numeric,Da,Da,input feature
+studytime,int64,numeric,0,4,numeric,Da,Da,input feature
+failures,int64,numeric,0,4,numeric,Da,Da,input feature
+schoolsup,str,categorical,0,2,no; yes,Da,Da,input feature
+famsup,str,categorical,0,2,no; yes,Da,Da,input feature
+paid,str,categorical,0,2,no; yes,Da,Da,input feature
+activities,str,categorical,0,2,no; yes,Da,Da,input feature
+nursery,str,categorical,0,2,no; yes,Da,Da,input feature
+higher,str,categorical,0,2,no; yes,Da,Da,input feature
+internet,str,categorical,0,2,no; yes,Da,Da,input feature
+romantic,str,categorical,0,2,no; yes,Da,Da,input feature
+famrel,int64,numeric,0,5,numeric,Da,Da,input feature
+freetime,int64,numeric,0,5,numeric,Da,Da,input feature
+goout,int64,numeric,0,5,numeric,Da,Da,input feature
+Dalc,int64,numeric,0,5,numeric,Da,Da,input feature
+Walc,int64,numeric,0,5,numeric,Da,Da,input feature
+health,int64,numeric,0,5,numeric,Da,Da,input feature
+absences,int64,numeric,0,24,numeric,Da,Da,input feature
+G1,int64,numeric,0,17,numeric,Da,Ne,"prethodna ocena, koristi se samo u scenariju sa G1 i G2"
+G2,int64,numeric,0,16,numeric,Da,Ne,"prethodna ocena, koristi se samo u scenariju sa G1 i G2"
+G3,int64,target,0,17,numeric,Ne,Ne,ciljna promenljiva

@@ -1,0 +1,15 @@
+﻿Opis,Vrednost
+Missing vrednosti,0
+Duplikati,0
+G1 van opsega 0-20,Ne
+G2 van opsega 0-20,Ne
+G3 van opsega 0-20,Ne
+Age anomalije,Ne
+Maksimalan broj izostanaka,32
+Ciljna promenljiva,G3
+Scenario sa G1 i G2,32 atributa; koriste se svi ulazni atributi osim G3.
+Scenario bez G1 i G2,"30 atributa; koriste se svi ulazni atributi osim G1, G2 i G3."
+Status top_features scenarija,Scenario top_features biće definisan kasnije nakon feature importance analize.
+Kandidati za uklanjanje,Nema
+Planirani preprocessing,"StandardScaler za numeričke atribute i OneHotEncoder(handle_unknown=""ignore"") za kategorijske atribute kroz ColumnTransformer za oba scenarija."
+Zaključak,"Dataset nema nedostajuće vrednosti i duplikate. G1, G2 i G3 su u očekivanom opsegu 0-20. Ne postoje očigledne ID ili konstantne kolone za uklanjanje. Preprocessing će koristiti StandardScaler za numeričke i OneHotEncoder za kategorijske atribute. Scenario top_features biće definisan kasnije nakon feature importance analize."
