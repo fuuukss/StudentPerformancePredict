@@ -4,6 +4,8 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from csv_utils import save_csv_if_changed
+
 
 # Podešavanje UTF-8 ispisa je korisno na Windows konzolama.
 # Putanje do osnovnih foldera i fajlova u projektu.
@@ -27,11 +29,6 @@ PLANNED_PREPROCESSING = (
 )
 
 
-def relative_path(path):
-    """Vraća putanju u odnosu na koren projekta, radi kraćeg ispisa."""
-    return path.relative_to(PROJECT_ROOT).as_posix()
-
-
 def format_value(value):
     """Formatira vrednosti za čitljiviji CSV izlaz."""
     if isinstance(value, bool):
@@ -50,30 +47,6 @@ def format_value(value):
         return "; ".join(str(item) for item in value)
 
     return str(value)
-
-
-def save_csv_if_changed(new_dataframe, path):
-    """
-    Čuva CSV samo ako fajl ne postoji ili ako se sadržaj promenio.
-
-    Ova funkcija pomaže da se generisani CSV fajlovi ne menjaju pri svakom
-    pokretanju skripte ako dataset nije promenjen.
-    """
-    new_dataframe_for_compare = new_dataframe.astype(str)
-
-    if not path.exists():
-        new_dataframe.to_csv(path, index=False, encoding="utf-8-sig")
-        print(f"CSV fajl kreiran: {relative_path(path)}")
-        return
-
-    existing_dataframe = pd.read_csv(path, dtype=str, encoding="utf-8-sig")
-
-    if existing_dataframe.equals(new_dataframe_for_compare):
-        print(f"CSV fajl nije promenjen: {relative_path(path)}")
-        return
-
-    new_dataframe.to_csv(path, index=False, encoding="utf-8-sig")
-    print(f"CSV fajl ažuriran: {relative_path(path)}")
 
 
 def has_values_outside_range(df, column, minimum, maximum):
@@ -328,13 +301,13 @@ def main():
 
     # 4. Kreiranje i čuvanje objedninjenih CSV izveštaja.
     dataset_overview = create_dataset_overview(df)
-    save_csv_if_changed(dataset_overview, DATASET_OVERVIEW_PATH)
+    save_csv_if_changed(dataset_overview, DATASET_OVERVIEW_PATH, PROJECT_ROOT)
 
     features_overview = create_features_overview(df, scenarios)
-    save_csv_if_changed(features_overview, FEATURES_OVERVIEW_PATH)
+    save_csv_if_changed(features_overview, FEATURES_OVERVIEW_PATH, PROJECT_ROOT)
 
     preprocessing_report = create_preprocessing_report(df, scenarios)
-    save_csv_if_changed(preprocessing_report, PREPROCESSING_REPORT_PATH)
+    save_csv_if_changed(preprocessing_report, PREPROCESSING_REPORT_PATH, PROJECT_ROOT)
 
     print("Priprema podataka je završena.")
 

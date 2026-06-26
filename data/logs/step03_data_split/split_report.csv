@@ -1,0 +1,15 @@
+﻿Opis,Vrednost
+Izvorni dataset,data/raw/student-por.csv
+Ciljna promenljiva,G3
+Random state,42
+Ukupan broj redova,649
+Train redovi,454
+Validation redovi,97
+Test redovi,98
+Train procenat,69.95
+Validation procenat,14.95
+Test procenat,15.10
+Sacuvani train skup,data/split/train.csv
+Sacuvani validation skup,data/split/validation.csv
+Sacuvani test skup,data/split/test.csv
+Zakljucak,"Dataset je jednom podeljen na train, validation i test skup. Isti redovi se koriste za scenarije sa G1/G2 i bez G1/G2, kako bi poredjenje modela bilo fer."
