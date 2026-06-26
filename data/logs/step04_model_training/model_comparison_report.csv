@@ -1,0 +1,7 @@
+﻿scenario,model,number_of_features,numeric_features,categorical_features,train_rows,validation_rows,test_rows,validation_MAE,validation_RMSE,validation_R2,test_MAE,test_RMSE,test_R2
+with_G1_G2,DummyRegressor,32,15,17,454,97,98,2.3008,3.1360,-0.0004,2.5932,3.5229,-0.0291
+with_G1_G2,Ridge Regression,32,15,17,454,97,98,0.7686,1.0555,0.8867,0.8204,1.3314,0.8530
+with_G1_G2,RandomForestRegressor,32,15,17,454,97,98,0.7058,0.9862,0.9011,0.8556,1.3905,0.8397
+without_G1_G2,DummyRegressor,30,13,17,454,97,98,2.3008,3.1360,-0.0004,2.5932,3.5229,-0.0291
+without_G1_G2,Ridge Regression,30,13,17,454,97,98,2.1183,2.8668,0.1639,2.3377,3.0243,0.2416
+without_G1_G2,RandomForestRegressor,30,13,17,454,97,98,2.0923,2.7779,0.2150,2.1971,2.9105,0.2976

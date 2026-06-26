@@ -3,6 +3,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from csv_utils import relative_path, save_csv_if_changed
+
 
 # Podešavanje UTF-8 ispisa je korisno na Windows konzolama.
 # Putanje do osnovnih foldera i fajlova u projektu.
@@ -29,11 +31,6 @@ EDA_CONCLUSION = (
 )
 
 
-def relative_path(path):
-    """Vraća putanju u odnosu na koren projekta, radi kraćeg ispisa."""
-    return path.relative_to(PROJECT_ROOT).as_posix()
-
-
 def format_value(value):
     """Formatira vrednosti za čitljiviji CSV izlaz."""
     if isinstance(value, float):
@@ -45,41 +42,12 @@ def format_value(value):
     return str(value)
 
 
-def save_csv_if_changed(new_dataframe, path):
-    """
-    Čuva CSV samo ako fajl ne postoji ili ako se sadržaj promenio.
-
-    Ova funkcija pomaže da se generisani CSV fajlovi ne menjaju pri svakom
-    pokretanju skripte ako dataset nije promenjen.
-    """
-    new_dataframe_for_compare = new_dataframe.astype(str)
-
-    if not path.exists():
-        new_dataframe.to_csv(path, index=False, encoding="utf-8-sig")
-        print(f"CSV fajl kreiran: {relative_path(path)}")
-        return
-
-    existing_dataframe = pd.read_csv(
-        path,
-        dtype=str,
-        encoding="utf-8-sig",
-        keep_default_na=False,
-    )
-
-    if existing_dataframe.equals(new_dataframe_for_compare):
-        print(f"CSV fajl nije promenjen: {relative_path(path)}")
-        return
-
-    new_dataframe.to_csv(path, index=False, encoding="utf-8-sig")
-    print(f"CSV fajl ažuriran: {relative_path(path)}")
-
-
 def save_graph(path):
     """Čuva trenutni grafik i zatvara figuru."""
     plt.tight_layout()
     plt.savefig(path, dpi=150)
     plt.close()
-    print(f"Grafik sačuvan: {relative_path(path)}")
+    print(f"Grafik sacuvan: {relative_path(path, PROJECT_ROOT)}")
 
 
 def create_g3_distribution_graph(df):
@@ -247,7 +215,7 @@ def main():
 
     # 10. EDA report, uključujući broj i procenat učenika sa G3 = 0.
     eda_report = create_eda_report(df, correlation_matrix)
-    save_csv_if_changed(eda_report, EDA_REPORT_PATH)
+    save_csv_if_changed(eda_report, EDA_REPORT_PATH, PROJECT_ROOT)
 
     print("EDA analiza je završena.")
 
