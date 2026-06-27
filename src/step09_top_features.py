@@ -1,3 +1,4 @@
+from itertools import product
 from math import sqrt
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from csv_utils import relative_path, save_csv_if_changed
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPLIT_DIR = PROJECT_ROOT / "data" / "split"
+STEP06_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step06_hyperparameter_tuning"
 STEP08_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step08_feature_importance"
 LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step09_top_features"
 GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step09_top_features"
@@ -24,9 +26,11 @@ GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step09_top_features"
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"
 TEST_PATH = SPLIT_DIR / "test.csv"
+TUNING_SUMMARY_PATH = STEP06_LOGS_DIR / "hyperparameter_tuning_summary.csv"
 FEATURE_IMPORTANCE_REPORT_PATH = STEP08_LOGS_DIR / "feature_importance_report.csv"
 
 TOP_FEATURES_SELECTION_PATH = LOGS_DIR / "top_features_selection.csv"
+TOP_FEATURES_TUNING_DETAILS_PATH = LOGS_DIR / "top_features_tuning_details.csv"
 TOP_FEATURES_MODEL_REPORT_PATH = LOGS_DIR / "top_features_model_comparison_report.csv"
 
 VALIDATION_GRAPH_PATH = GRAPHS_DIR / "validation_top_features_comparison.png"
@@ -177,16 +181,72 @@ def create_scenarios(df, top_features_by_scenario):
     return scenarios
 
 
-def create_models():
-    """Definise dogovorene modele za poredjenje."""
+def create_parameter_grid():
+    """Definise isti mali grid hiperparametara koji je koriscen u Step 06."""
+    ridge_grid = [{"alpha": alpha} for alpha in [0.01, 0.1, 1.0, 10.0, 100.0]]
+
+    random_forest_grid = [
+        {
+            "n_estimators": n_estimators,
+            "max_depth": max_depth,
+            "min_samples_leaf": min_samples_leaf,
+        }
+        for n_estimators, max_depth, min_samples_leaf in product(
+            [100, 200],
+            [None, 5, 10],
+            [1, 2, 5],
+        )
+    ]
+
     return {
-        "DummyRegressor": DummyRegressor(strategy="mean"),
-        "Ridge Regression": Ridge(),
-        "RandomForestRegressor": RandomForestRegressor(
-            n_estimators=100,
-            random_state=RANDOM_STATE,
-        ),
+        "Ridge Regression": ridge_grid,
+        "RandomForestRegressor": random_forest_grid,
     }
+
+
+def format_parameters(parameters):
+    """Pretvara hiperparametre u kratak tekst za CSV report."""
+    return "; ".join(f"{key}={value}" for key, value in parameters.items())
+
+
+def parse_parameters(parameters_text):
+    """Vraca hiperparametre iz tekstualnog zapisa u CSV reportu."""
+    parameters = {}
+
+    if parameters_text == "default":
+        return parameters
+
+    for item in parameters_text.split("; "):
+        key, value = item.split("=")
+
+        if value == "None":
+            parameters[key] = None
+        elif "." in value:
+            parameters[key] = float(value)
+        else:
+            parameters[key] = int(value)
+
+    return parameters
+
+
+def create_model(model_name, parameters):
+    """Kreira model sa zadatim parametrima."""
+    if model_name == "DummyRegressor":
+        return DummyRegressor(strategy="mean")
+
+    if model_name == "Ridge Regression":
+        alpha = parameters.get("alpha", 1.0)
+        return Ridge(alpha=alpha)
+
+    if model_name == "RandomForestRegressor":
+        return RandomForestRegressor(
+            n_estimators=parameters.get("n_estimators", 100),
+            max_depth=parameters.get("max_depth"),
+            min_samples_leaf=parameters.get("min_samples_leaf", 1),
+            random_state=RANDOM_STATE,
+        )
+
+    raise ValueError(f"Nepoznat model: {model_name}")
 
 
 def create_pipeline(preprocessor, model):
@@ -216,13 +276,141 @@ def evaluate_model(pipeline, X, y):
     return calculate_metrics(y, predictions)
 
 
+def get_best_parameters_for_full_scenario(tuning_summary, scenario_name, model_name):
+    """Vraca najbolje Step 06 parametre za scenarije sa svim atributima."""
+    if model_name == "DummyRegressor":
+        return "default", {}
+
+    row = tuning_summary[
+        (tuning_summary["scenario"] == scenario_name)
+        & (tuning_summary["model"] == model_name)
+    ].iloc[0]
+
+    return row["best_parameters"], parse_parameters(row["best_parameters"])
+
+
+def tune_top_features_on_validation(train_df, validation_df, top_features_by_scenario):
+    """Trenira sve top_features kombinacije i racuna samo validation metrike."""
+    scenarios = create_scenarios(train_df, top_features_by_scenario)
+    parameter_grid = create_parameter_grid()
+    report_rows = []
+
+    for scenario_name in TOP_FEATURE_SCENARIO_SOURCES:
+        scenario = scenarios[scenario_name]
+        feature_columns = scenario["features"]
+        X_train = train_df[feature_columns]
+        y_train = train_df[TARGET_COLUMN]
+        X_validation = validation_df[feature_columns]
+        y_validation = validation_df[TARGET_COLUMN]
+
+        for model_name, parameter_combinations in parameter_grid.items():
+            for parameters in parameter_combinations:
+                preprocessor = create_preprocessor(
+                    scenario["numeric_features"],
+                    scenario["categorical_features"],
+                )
+                model = create_model(model_name, parameters)
+                pipeline = create_pipeline(preprocessor, model)
+                pipeline.fit(X_train, y_train)
+
+                validation_metrics = evaluate_model(
+                    pipeline,
+                    X_validation,
+                    y_validation,
+                )
+
+                report_rows.append(
+                    {
+                        "scenario": scenario_name,
+                        "model": model_name,
+                        "parameters": format_parameters(parameters),
+                        "number_of_features": len(feature_columns),
+                        "selected_features": ", ".join(feature_columns),
+                        "numeric_features": len(scenario["numeric_features"]),
+                        "categorical_features": len(scenario["categorical_features"]),
+                        "train_rows": len(train_df),
+                        "validation_rows": len(validation_df),
+                        "validation_MAE": validation_metrics["MAE"],
+                        "validation_RMSE": validation_metrics["RMSE"],
+                        "validation_R2": validation_metrics["R2"],
+                        "is_best": False,
+                    }
+                )
+
+    details_report = pd.DataFrame(report_rows)
+    details_report = mark_best_parameter_combinations(details_report)
+
+    return details_report
+
+
+def mark_best_parameter_combinations(details_report):
+    """Oznacava najbolju kombinaciju po validation RMSE za svaki scenario/model."""
+    details_report = details_report.copy()
+
+    best_indexes = (
+        details_report.groupby(["scenario", "model"])["validation_RMSE"].idxmin()
+    )
+    details_report.loc[best_indexes, "is_best"] = True
+
+    return details_report
+
+
+def get_best_parameters_for_top_features(
+    top_features_tuning_details,
+    scenario_name,
+    model_name,
+):
+    """Vraca najbolje top_features parametre iz details report-a."""
+    best_row = top_features_tuning_details[
+        (top_features_tuning_details["scenario"] == scenario_name)
+        & (top_features_tuning_details["model"] == model_name)
+        & (top_features_tuning_details["is_best"])
+    ].iloc[0]
+
+    return best_row["parameters"], parse_parameters(best_row["parameters"])
+
+
+def evaluate_selected_model(
+    train_df,
+    validation_df,
+    test_df,
+    scenario,
+    model_name,
+    parameters,
+):
+    """Trenira izabrani model i racuna validation i test metrike."""
+    feature_columns = scenario["features"]
+    X_train = train_df[feature_columns]
+    y_train = train_df[TARGET_COLUMN]
+    X_validation = validation_df[feature_columns]
+    y_validation = validation_df[TARGET_COLUMN]
+    X_test = test_df[feature_columns]
+    y_test = test_df[TARGET_COLUMN]
+
+    preprocessor = create_preprocessor(
+        scenario["numeric_features"],
+        scenario["categorical_features"],
+    )
+    model = create_model(model_name, parameters)
+    pipeline = create_pipeline(preprocessor, model)
+    pipeline.fit(X_train, y_train)
+
+    return evaluate_model(pipeline, X_validation, y_validation), evaluate_model(
+        pipeline,
+        X_test,
+        y_test,
+    )
+
+
 def create_model_comparison_report(
     train_df,
     validation_df,
     test_df,
     top_features_by_scenario,
+    tuning_summary,
+    top_features_tuning_details,
 ):
-    """Trenira modele po scenarijima i kreira CSV izvestaj sa metrikama."""
+    """Trenira najbolje dostupne modele po scenarijima i kreira CSV report."""
     scenarios = create_scenarios(train_df, top_features_by_scenario)
     report_rows = []
 
@@ -230,28 +418,60 @@ def create_model_comparison_report(
         scenario = scenarios[scenario_name]
         feature_columns = scenario["features"]
 
-        X_train = train_df[feature_columns]
-        y_train = train_df[TARGET_COLUMN]
-        X_validation = validation_df[feature_columns]
-        y_validation = validation_df[TARGET_COLUMN]
-        X_test = test_df[feature_columns]
-        y_test = test_df[TARGET_COLUMN]
-
-        for model_name, model in create_models().items():
-            preprocessor = create_preprocessor(
-                scenario["numeric_features"],
-                scenario["categorical_features"],
-            )
-            pipeline = create_pipeline(preprocessor, model)
-            pipeline.fit(X_train, y_train)
-
-            validation_metrics = evaluate_model(pipeline, X_validation, y_validation)
-            test_metrics = evaluate_model(pipeline, X_test, y_test)
+        for model_name in MODEL_ORDER:
+            if model_name == "DummyRegressor":
+                parameters_text = "default"
+                parameters = {}
+                model_version = "baseline"
+                selection_metric = "none"
+                validation_metrics, test_metrics = evaluate_selected_model(
+                    train_df,
+                    validation_df,
+                    test_df,
+                    scenario,
+                    model_name,
+                    parameters,
+                )
+            elif scenario_name.startswith("top_features"):
+                parameters_text, parameters = get_best_parameters_for_top_features(
+                    top_features_tuning_details,
+                    scenario_name,
+                    model_name,
+                )
+                model_version = "tuned_on_top_features"
+                selection_metric = "validation_RMSE"
+                validation_metrics, test_metrics = evaluate_selected_model(
+                    train_df,
+                    validation_df,
+                    test_df,
+                    scenario,
+                    model_name,
+                    parameters,
+                )
+            else:
+                parameters_text, parameters = get_best_parameters_for_full_scenario(
+                    tuning_summary,
+                    scenario_name,
+                    model_name,
+                )
+                model_version = "tuned"
+                selection_metric = "validation_RMSE"
+                validation_metrics, test_metrics = evaluate_selected_model(
+                    train_df,
+                    validation_df,
+                    test_df,
+                    scenario,
+                    model_name,
+                    parameters,
+                )
 
             report_rows.append(
                 {
                     "scenario": scenario_name,
                     "model": model_name,
+                    "model_version": model_version,
+                    "parameters": parameters_text,
+                    "selection_metric": selection_metric,
                     "number_of_features": len(feature_columns),
                     "selected_features": ", ".join(feature_columns),
                     "numeric_features": len(scenario["numeric_features"]),
@@ -278,6 +498,19 @@ def create_model_comparison_report(
         "test_R2",
     ]
     report[metric_columns] = report[metric_columns].map(format_value)
+
+    return report
+
+
+def format_report_metrics(report, metric_columns):
+    """Formatira numericke kolone u reportu za citljiv CSV izlaz."""
+    report = report.copy()
+    report[metric_columns] = report[metric_columns].map(format_value)
+
+    if "is_best" in report.columns:
+        report["is_best"] = report["is_best"].map(
+            lambda value: "Da" if value else "Ne"
+        )
 
     return report
 
@@ -387,13 +620,13 @@ def create_top_features_graphs(report):
         report,
         "validation",
         VALIDATION_GRAPH_PATH,
-        "Poredjenje top_features scenarija na validation skupu",
+        "Poredjenje tuned top_features scenarija na validation skupu",
     )
     create_metrics_comparison_graph(
         report,
         "test",
         TEST_GRAPH_PATH,
-        "Poredjenje top_features scenarija na test skupu",
+        "Poredjenje tuned top_features scenarija na test skupu",
     )
 
 
@@ -410,7 +643,8 @@ def main():
     validation_df = pd.read_csv(VALIDATION_PATH)
     test_df = pd.read_csv(TEST_PATH)
 
-    # 2. Ucitavanje Step 08 feature importance report-a i izbor top atributa.
+    # 2. Ucitavanje Step 08/Step 06 report-a i izbor top atributa.
+    tuning_summary = pd.read_csv(TUNING_SUMMARY_PATH)
     feature_importance_report = pd.read_csv(FEATURE_IMPORTANCE_REPORT_PATH)
     top_features_selection = select_top_features(feature_importance_report)
     top_features_by_scenario = get_top_features_by_scenario(top_features_selection)
@@ -426,12 +660,30 @@ def main():
         PROJECT_ROOT,
     )
 
-    # 5. Treniranje dogovorenih modela po scenarijima.
+    # 5. Rucni grid search za top_features scenarije na validation skupu.
+    top_features_tuning_details = tune_top_features_on_validation(
+        train_df,
+        validation_df,
+        top_features_by_scenario,
+    )
+    formatted_tuning_details = format_report_metrics(
+        top_features_tuning_details,
+        ["validation_MAE", "validation_RMSE", "validation_R2"],
+    )
+    save_csv_if_changed(
+        formatted_tuning_details,
+        TOP_FEATURES_TUNING_DETAILS_PATH,
+        PROJECT_ROOT,
+    )
+
+    # 6. Test metrike se racunaju samo za najbolje kombinacije.
     model_comparison_report = create_model_comparison_report(
         train_df,
         validation_df,
         test_df,
         top_features_by_scenario,
+        tuning_summary,
+        top_features_tuning_details,
     )
     save_csv_if_changed(
         model_comparison_report,
@@ -439,7 +691,7 @@ def main():
         PROJECT_ROOT,
     )
 
-    # 6. Graficko poredjenje scenarija.
+    # 7. Graficko poredjenje scenarija.
     create_top_features_graphs(model_comparison_report)
     print_top_feature_summary(top_features_selection)
 
