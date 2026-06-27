@@ -90,10 +90,10 @@ def prepare_comparison_report(default_results, tuned_results):
     return comparison
 
 
-def add_value_labels(axis, bars, metric_name):
+def add_value_labels(axis, bars, metric_name, label_level=0):
     """Dodaje kratke vrednosti iznad stubica na grafikonu."""
     y_min, y_max = axis.get_ylim()
-    offset = (y_max - y_min) * 0.025
+    offset = (y_max - y_min) * (0.025 + label_level * 0.035)
 
     for bar in bars:
         value = bar.get_height()
@@ -105,8 +105,8 @@ def add_value_labels(axis, bars, metric_name):
             label,
             ha="center",
             va="bottom" if is_positive else "top",
-            fontsize=7,
-            rotation=90,
+            fontsize=8,
+            rotation=0,
             bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.75, "pad": 0.6},
             clip_on=False,
         )
@@ -153,7 +153,7 @@ def draw_metric_subplot(axis, comparison, metric_column, metric_name):
                     linewidth=0.6,
                     label=version_name if current_position == 0 else None,
                 )
-                add_value_labels(axis, bars, metric_name)
+                add_value_labels(axis, bars, metric_name, version_index)
 
             current_position += 1
 

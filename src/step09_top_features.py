@@ -504,10 +504,10 @@ def save_graph(path):
     print(f"Grafik sacuvan: {relative_path(path, PROJECT_ROOT)}")
 
 
-def add_value_labels(axis, bars, metric_name):
+def add_value_labels(axis, bars, metric_name, label_level=0):
     """Dodaje kratke vrednosti iznad stubica na grafikonu."""
     y_min, y_max = axis.get_ylim()
-    offset = (y_max - y_min) * 0.025
+    offset = (y_max - y_min) * (0.025 + label_level * 0.035)
 
     for bar in bars:
         value = bar.get_height()
@@ -520,7 +520,7 @@ def add_value_labels(axis, bars, metric_name):
             ha="center",
             va="bottom" if is_positive else "top",
             fontsize=7,
-            rotation=90,
+            rotation=0,
             bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.75, "pad": 0.6},
             clip_on=False,
         )
@@ -541,10 +541,11 @@ def draw_grouped_metric_bars(axis, report, metric_column, metric_name):
     """Crta grouped bar chart za jednu metriku."""
     metric_table = get_metric_values(report, metric_column)
     x_positions = range(len(SCENARIO_ORDER))
-    bar_width = 0.20
+    bar_width = 0.16
+    bar_spacing = 0.28
 
     for model_index, model_name in enumerate(MODEL_ORDER):
-        offset = (model_index - 1) * bar_width
+        offset = (model_index - 1) * bar_spacing
         values = metric_table[model_name].tolist()
         bars = axis.bar(
             [position + offset for position in x_positions],
@@ -555,7 +556,7 @@ def draw_grouped_metric_bars(axis, report, metric_column, metric_name):
             edgecolor="black",
             linewidth=0.6,
         )
-        add_value_labels(axis, bars, metric_name)
+        add_value_labels(axis, bars, metric_name, model_index)
 
     axis.set_title(metric_name)
     axis.set_xticks(list(x_positions))
