@@ -18,13 +18,6 @@ FEATURES_OVERVIEW_PATH = LOGS_DIR / "features_overview.csv"
 PREPROCESSING_REPORT_PATH = LOGS_DIR / "preprocessing_report.csv"
 
 TARGET_COLUMN = "G3"
-PLANNED_PREPROCESSING = (
-    "StandardScaler za numeričke atribute i "
-    'OneHotEncoder(handle_unknown="ignore") za kategorijske atribute kroz '
-    "ColumnTransformer za oba scenarija."
-)
-
-
 def format_value(value):
     """Formatira vrednosti za čitljiviji CSV izlaz."""
     if isinstance(value, bool):

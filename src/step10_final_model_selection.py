@@ -151,15 +151,10 @@ def train_and_save_final_model(train_df, validation_df, test_df, feature_columns
     }
     joblib.dump(final_model_bundle, FINAL_MODEL_PATH)
 
-    return final_test_metrics, predictions_report, len(train_validation_df)
+    return final_test_metrics, predictions_report
 
 
-def create_final_model_report(
-    final_test_metrics,
-    train_validation_rows,
-    test_rows,
-    feature_columns,
-):
+def create_final_model_report(final_test_metrics):
     """Kreira report sa finalnim izborom modela."""
     return pd.DataFrame(
         [
@@ -302,13 +297,11 @@ def main():
 
     # 2. Treniranje finalnog modela na train+validation skupu i cuvanje modela.
     final_feature_columns = get_final_feature_columns()
-    final_test_metrics, predictions_report, train_validation_rows = (
-        train_and_save_final_model(
-            train_df,
-            validation_df,
-            test_df,
-            final_feature_columns,
-        )
+    final_test_metrics, predictions_report = train_and_save_final_model(
+        train_df,
+        validation_df,
+        test_df,
+        final_feature_columns,
     )
 
     # 3. Cuvanje predikcija i grafika finalnog modela.
@@ -320,12 +313,7 @@ def main():
     create_final_model_graphs(final_test_metrics, predictions_report)
 
     # 4. Cuvanje finalnog report-a.
-    final_model_report = create_final_model_report(
-        final_test_metrics,
-        train_validation_rows,
-        len(test_df),
-        final_feature_columns,
-    )
+    final_model_report = create_final_model_report(final_test_metrics)
     save_csv_if_changed(
         format_report(final_model_report),
         FINAL_MODEL_REPORT_PATH,

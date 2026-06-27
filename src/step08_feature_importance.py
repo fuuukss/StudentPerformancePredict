@@ -17,8 +17,6 @@ LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step08_feature_importance"
 GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step08_feature_importance"
 
 TRAIN_PATH = SPLIT_DIR / "train.csv"
-VALIDATION_PATH = SPLIT_DIR / "validation.csv"
-TEST_PATH = SPLIT_DIR / "test.csv"
 WITH_G1_G2_REPORT_PATH = LOGS_DIR / "feature_importance_with_G1_G2.csv"
 WITHOUT_G1_G2_REPORT_PATH = LOGS_DIR / "feature_importance_without_G1_G2.csv"
 
@@ -243,7 +241,7 @@ def create_feature_importance_reports(train_df):
     detailed_report = pd.concat(detailed_reports, ignore_index=True)
     aggregated_report = aggregate_importance(detailed_report)
 
-    return aggregated_report, detailed_report
+    return aggregated_report
 
 
 def format_report(report):
@@ -312,7 +310,7 @@ def create_single_scenario_graph(report, scenario_name, path):
 
 
 def create_feature_importance_graphs(report):
-    """Kreira pojedinacne i zajednicki feature importance grafik."""
+    """Kreira pojedinacne feature importance grafike."""
     create_single_scenario_graph(
         report,
         "with_G1_G2",
@@ -334,19 +332,15 @@ def print_top_features(report):
 
 
 def main():
-    # 1. Ucitavanje prethodno sacuvanih train, validation i test skupova.
+    # 1. Ucitavanje prethodno sacuvanog train skupa.
     train_df = pd.read_csv(TRAIN_PATH)
-    pd.read_csv(VALIDATION_PATH)
-    pd.read_csv(TEST_PATH)
 
     # 2. Kreiranje foldera za CSV logove i grafike ako ne postoje.
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     GRAPHS_DIR.mkdir(parents=True, exist_ok=True)
 
     # 3. Treniranje tuned Random Forest modela i izvlacenje importance vrednosti.
-    feature_importance_report, detailed_feature_importance_report = (
-        create_feature_importance_reports(train_df)
-    )
+    feature_importance_report = create_feature_importance_reports(train_df)
 
     # 4. Cuvanje odvojenih feature importance reporta po scenarijima.
     save_csv_if_changed(

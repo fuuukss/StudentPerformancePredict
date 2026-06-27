@@ -401,14 +401,10 @@ def create_model_comparison_report(
 
     for scenario_name in SCENARIO_ORDER:
         scenario = scenarios[scenario_name]
-        feature_columns = scenario["features"]
 
         for model_name in MODEL_ORDER:
             if model_name == "DummyRegressor":
-                parameters_text = "default"
                 parameters = {}
-                model_version = "baseline"
-                selection_metric = "none"
                 validation_metrics, test_metrics = evaluate_selected_model(
                     train_df,
                     validation_df,
@@ -418,13 +414,11 @@ def create_model_comparison_report(
                     parameters,
                 )
             elif scenario_name.startswith("top_features"):
-                parameters_text, parameters = get_best_parameters_for_top_features(
+                _, parameters = get_best_parameters_for_top_features(
                     top_features_tuning_details,
                     scenario_name,
                     model_name,
                 )
-                model_version = "tuned_on_top_features"
-                selection_metric = "validation_RMSE"
                 validation_metrics, test_metrics = evaluate_selected_model(
                     train_df,
                     validation_df,
@@ -434,13 +428,11 @@ def create_model_comparison_report(
                     parameters,
                 )
             else:
-                parameters_text, parameters = get_best_parameters_for_full_scenario(
+                _, parameters = get_best_parameters_for_full_scenario(
                     tuning_summary,
                     scenario_name,
                     model_name,
                 )
-                model_version = "tuned"
-                selection_metric = "validation_RMSE"
                 validation_metrics, test_metrics = evaluate_selected_model(
                     train_df,
                     validation_df,
