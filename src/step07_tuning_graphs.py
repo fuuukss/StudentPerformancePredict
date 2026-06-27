@@ -92,16 +92,23 @@ def prepare_comparison_report(default_results, tuned_results):
 
 def add_value_labels(axis, bars, metric_name):
     """Dodaje kratke vrednosti iznad stubica na grafikonu."""
+    y_min, y_max = axis.get_ylim()
+    offset = (y_max - y_min) * 0.025
+
     for bar in bars:
         value = bar.get_height()
         label = f"{value:.2f}" if metric_name in ["MAE", "RMSE"] else f"{value:.3f}"
+        is_positive = value >= 0
         axis.text(
             bar.get_x() + bar.get_width() / 2,
-            value,
+            value + offset if is_positive else value - offset,
             label,
             ha="center",
-            va="bottom",
-            fontsize=8,
+            va="bottom" if is_positive else "top",
+            fontsize=7,
+            rotation=90,
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.75, "pad": 0.6},
+            clip_on=False,
         )
 
 
@@ -162,6 +169,8 @@ def draw_metric_subplot(axis, comparison, metric_column, metric_name):
         axis.set_ylabel("Veca vrednost je bolja")
     else:
         axis.set_ylabel("Manja vrednost je bolja")
+
+    axis.margins(y=0.22)
 
 
 def create_tuning_comparison_graph(comparison, metric_prefix, path, title):

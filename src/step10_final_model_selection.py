@@ -24,7 +24,7 @@ FINAL_MODEL_DIR = PROJECT_ROOT / "models" / "final"
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"
 TEST_PATH = SPLIT_DIR / "test.csv"
-TOP_FEATURES_SELECTION_PATH = STEP09_LOGS_DIR / "top_features_selection.csv"
+TOP_FEATURES_WITH_G1_G2_PATH = STEP09_LOGS_DIR / "top_features_with_G1_G2.csv"
 
 FINAL_MODEL_REPORT_PATH = LOGS_DIR / "final_model_report.csv"
 FINAL_MODEL_PREDICTIONS_PATH = LOGS_DIR / "final_model_predictions.csv"
@@ -111,10 +111,7 @@ def calculate_metrics(y_true, y_pred):
 
 def get_final_feature_columns():
     """Vraca listu atributa za izabrani finalni top_features scenario."""
-    top_features_selection = pd.read_csv(TOP_FEATURES_SELECTION_PATH)
-    final_features = top_features_selection[
-        top_features_selection["top_features_scenario"] == FINAL_SCENARIO
-    ].copy()
+    final_features = pd.read_csv(TOP_FEATURES_WITH_G1_G2_PATH)
     final_features["rank"] = final_features["rank"].astype(int)
 
     return final_features.sort_values("rank")["feature"].tolist()
@@ -172,13 +169,7 @@ def create_final_model_report(
                 ).as_posix(),
                 "scenario": FINAL_SCENARIO,
                 "model": FINAL_MODEL_NAME,
-                "model_version": FINAL_MODEL_VERSION,
                 "parameters": FINAL_MODEL_PARAMETERS,
-                "selected_features": ", ".join(feature_columns),
-                "number_of_features": len(feature_columns),
-                "trained_on": "train+validation",
-                "train_validation_rows": train_validation_rows,
-                "test_rows": test_rows,
                 "final_test_MAE": final_test_metrics["MAE"],
                 "final_test_RMSE": final_test_metrics["RMSE"],
                 "final_test_R2": final_test_metrics["R2"],

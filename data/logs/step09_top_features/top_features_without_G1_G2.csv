@@ -1,0 +1,11 @@
+﻿rank,feature,importance
+1,failures,0.247520
+2,reason,0.060714
+3,absences,0.052936
+4,school,0.047109
+5,higher,0.043482
+6,age,0.039692
+7,Fedu,0.036970
+8,health,0.034622
+9,Dalc,0.032454
+10,studytime,0.031868

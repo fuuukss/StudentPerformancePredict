@@ -18,10 +18,6 @@ FEATURES_OVERVIEW_PATH = LOGS_DIR / "features_overview.csv"
 PREPROCESSING_REPORT_PATH = LOGS_DIR / "preprocessing_report.csv"
 
 TARGET_COLUMN = "G3"
-TOP_FEATURES_STATUS = (
-    "Scenario top_features biće definisan kasnije nakon feature importance "
-    "analize."
-)
 PLANNED_PREPROCESSING = (
     "StandardScaler za numeričke atribute i "
     'OneHotEncoder(handle_unknown="ignore") za kategorijske atribute kroz '
@@ -149,14 +145,6 @@ def create_dataset_overview(df):
         {"Opis": "Minimalna ocena G2", "Vrednost": df["G2"].min()},
         {"Opis": "Maksimalna ocena G1", "Vrednost": df["G1"].max()},
         {"Opis": "Maksimalna ocena G2", "Vrednost": df["G2"].max()},
-        {
-            "Opis": "Zaključak",
-            "Vrednost": (
-                "Dataset nema nedostajuće vrednosti i duplikate. G1 i G2 će "
-                "biti posebno analizirani jer predstavljaju prethodne ocene i "
-                "očekivano su povezani sa G3."
-            ),
-        },
     ]
 
     overview = pd.DataFrame(overview_rows, columns=["Opis", "Vrednost"])
@@ -267,18 +255,18 @@ def create_preprocessing_report(df, scenarios):
                 "koriste se svi ulazni atributi osim G1, G2 i G3."
             ),
         },
-        {"Opis": "Status top_features scenarija", "Vrednost": TOP_FEATURES_STATUS},
         {"Opis": "Kandidati za uklanjanje", "Vrednost": removal_candidates},
-        {"Opis": "Planirani preprocessing", "Vrednost": PLANNED_PREPROCESSING},
         {
             "Opis": "Zaključak",
             "Vrednost": (
-                "Dataset nema nedostajuće vrednosti i duplikate. G1, G2 i G3 "
-                "su u očekivanom opsegu 0-20. Ne postoje očigledne ID ili "
-                "konstantne kolone za uklanjanje. Preprocessing će koristiti "
-                "StandardScaler za numeričke i OneHotEncoder za kategorijske "
-                "atribute. Scenario top_features biće definisan kasnije nakon "
-                "feature importance analize."
+                "Dataset nema nedostajuće vrednosti ni duplikate. Ocene G1, "
+                "G2 i G3 su u očekivanom opsegu 0-20. Ne postoje očigledne "
+                "kolone ili redovi za uklanjanje. U ovom koraku su definisani "
+                "target G3 i osnovni scenariji sa G1/G2 i bez G1/G2. "
+                "Preprocessing nije primenjen unapred nad celim datasetom; "
+                "StandardScaler i OneHotEncoder se koriste kasnije unutar "
+                "Pipeline-a tokom treniranja modela, čime se izbegava data "
+                "leakage."
             ),
         },
     ]

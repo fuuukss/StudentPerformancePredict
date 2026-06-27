@@ -27,9 +27,11 @@ TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"
 TEST_PATH = SPLIT_DIR / "test.csv"
 TUNING_SUMMARY_PATH = STEP06_LOGS_DIR / "hyperparameter_tuning_summary.csv"
-FEATURE_IMPORTANCE_REPORT_PATH = STEP08_LOGS_DIR / "feature_importance_report.csv"
+WITH_G1_G2_IMPORTANCE_PATH = STEP08_LOGS_DIR / "feature_importance_with_G1_G2.csv"
+WITHOUT_G1_G2_IMPORTANCE_PATH = STEP08_LOGS_DIR / "feature_importance_without_G1_G2.csv"
 
-TOP_FEATURES_SELECTION_PATH = LOGS_DIR / "top_features_selection.csv"
+TOP_FEATURES_WITH_G1_G2_PATH = LOGS_DIR / "top_features_with_G1_G2.csv"
+TOP_FEATURES_WITHOUT_G1_G2_PATH = LOGS_DIR / "top_features_without_G1_G2.csv"
 TOP_FEATURES_TUNING_DETAILS_PATH = LOGS_DIR / "top_features_tuning_details.csv"
 TOP_FEATURES_MODEL_REPORT_PATH = LOGS_DIR / "top_features_model_comparison_report.csv"
 
@@ -103,14 +105,17 @@ def create_preprocessor(numeric_features, categorical_features):
     )
 
 
-def select_top_features(feature_importance_report):
+def select_top_features(with_g1_g2_report, without_g1_g2_report):
     """Bira top atribute posebno za scenarije sa G1/G2 i bez G1/G2."""
-    selections = []
+    selections = {}
 
-    for top_features_scenario, source_scenario in TOP_FEATURE_SCENARIO_SOURCES.items():
-        source_report = feature_importance_report[
-            feature_importance_report["scenario"] == source_scenario
-        ].copy()
+    source_reports = {
+        "top_features_with_G1_G2": with_g1_g2_report,
+        "top_features_without_G1_G2": without_g1_g2_report,
+    }
+
+    for top_features_scenario, source_report in source_reports.items():
+        source_report = source_report.copy()
         source_report["importance"] = source_report["importance"].astype(float)
         selected = (
             source_report.sort_values("rank")
@@ -118,21 +123,9 @@ def select_top_features(feature_importance_report):
             .reset_index(drop=True)
             .copy()
         )
-        selected["top_features_scenario"] = top_features_scenario
-        selected["selection_source_scenario"] = source_scenario
-        selections.append(selected)
+        selections[top_features_scenario] = selected[["rank", "feature", "importance"]]
 
-    selected_features = pd.concat(selections, ignore_index=True)
-
-    return selected_features[
-        [
-            "top_features_scenario",
-            "selection_source_scenario",
-            "feature",
-            "importance",
-            "rank",
-        ]
-    ]
+    return selections
 
 
 def format_top_features_selection(top_features_selection):
@@ -148,10 +141,8 @@ def format_top_features_selection(top_features_selection):
 def get_top_features_by_scenario(top_features_selection):
     """Vraca recnik top atributa po top_features scenariju."""
     return {
-        scenario_name: group.sort_values("rank")["feature"].tolist()
-        for scenario_name, group in top_features_selection.groupby(
-            "top_features_scenario"
-        )
+        scenario_name: selection.sort_values("rank")["feature"].tolist()
+        for scenario_name, selection in top_features_selection.items()
     }
 
 
@@ -324,12 +315,6 @@ def tune_top_features_on_validation(train_df, validation_df, top_features_by_sce
                         "scenario": scenario_name,
                         "model": model_name,
                         "parameters": format_parameters(parameters),
-                        "number_of_features": len(feature_columns),
-                        "selected_features": ", ".join(feature_columns),
-                        "numeric_features": len(scenario["numeric_features"]),
-                        "categorical_features": len(scenario["categorical_features"]),
-                        "train_rows": len(train_df),
-                        "validation_rows": len(validation_df),
                         "validation_MAE": validation_metrics["MAE"],
                         "validation_RMSE": validation_metrics["RMSE"],
                         "validation_R2": validation_metrics["R2"],
@@ -469,16 +454,6 @@ def create_model_comparison_report(
                 {
                     "scenario": scenario_name,
                     "model": model_name,
-                    "model_version": model_version,
-                    "parameters": parameters_text,
-                    "selection_metric": selection_metric,
-                    "number_of_features": len(feature_columns),
-                    "selected_features": ", ".join(feature_columns),
-                    "numeric_features": len(scenario["numeric_features"]),
-                    "categorical_features": len(scenario["categorical_features"]),
-                    "train_rows": len(train_df),
-                    "validation_rows": len(validation_df),
-                    "test_rows": len(test_df),
                     "validation_MAE": validation_metrics["MAE"],
                     "validation_RMSE": validation_metrics["RMSE"],
                     "validation_R2": validation_metrics["R2"],
@@ -505,6 +480,13 @@ def create_model_comparison_report(
 def format_report_metrics(report, metric_columns):
     """Formatira numericke kolone u reportu za citljiv CSV izlaz."""
     report = report.copy()
+
+    if "is_best" in report.columns:
+        report = report.sort_values(
+            ["is_best", "scenario", "model", "validation_RMSE"],
+            ascending=[False, True, True, True],
+        ).reset_index(drop=True)
+
     report[metric_columns] = report[metric_columns].map(format_value)
 
     if "is_best" in report.columns:
@@ -524,16 +506,23 @@ def save_graph(path):
 
 def add_value_labels(axis, bars, metric_name):
     """Dodaje kratke vrednosti iznad stubica na grafikonu."""
+    y_min, y_max = axis.get_ylim()
+    offset = (y_max - y_min) * 0.025
+
     for bar in bars:
         value = bar.get_height()
         label = f"{value:.2f}" if metric_name != "R2" else f"{value:.3f}"
+        is_positive = value >= 0
         axis.text(
             bar.get_x() + bar.get_width() / 2,
-            value,
+            value + offset if is_positive else value - offset,
             label,
             ha="center",
-            va="bottom",
-            fontsize=8,
+            va="bottom" if is_positive else "top",
+            fontsize=7,
+            rotation=90,
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.75, "pad": 0.6},
+            clip_on=False,
         )
 
 
@@ -578,6 +567,8 @@ def draw_grouped_metric_bars(axis, report, metric_column, metric_name):
         axis.set_ylabel("Veca vrednost je bolja")
     else:
         axis.set_ylabel("Manja vrednost je bolja")
+
+    axis.margins(y=0.22)
 
 
 def create_metrics_comparison_graph(report, metric_prefix, path, title):
@@ -632,8 +623,10 @@ def create_top_features_graphs(report):
 
 def print_top_feature_summary(top_features_selection):
     """Ispisuje izabrane top atribute."""
-    for scenario_name, group in top_features_selection.groupby("top_features_scenario"):
-        selected_features = ", ".join(group.sort_values("rank")["feature"].tolist())
+    for scenario_name, selection in top_features_selection.items():
+        selected_features = ", ".join(
+            selection.sort_values("rank")["feature"].tolist()
+        )
         print(f"Izabrani atributi za {scenario_name}: {selected_features}")
 
 
@@ -645,18 +638,29 @@ def main():
 
     # 2. Ucitavanje Step 08/Step 06 report-a i izbor top atributa.
     tuning_summary = pd.read_csv(TUNING_SUMMARY_PATH)
-    feature_importance_report = pd.read_csv(FEATURE_IMPORTANCE_REPORT_PATH)
-    top_features_selection = select_top_features(feature_importance_report)
+    with_g1_g2_importance = pd.read_csv(WITH_G1_G2_IMPORTANCE_PATH)
+    without_g1_g2_importance = pd.read_csv(WITHOUT_G1_G2_IMPORTANCE_PATH)
+    top_features_selection = select_top_features(
+        with_g1_g2_importance,
+        without_g1_g2_importance,
+    )
     top_features_by_scenario = get_top_features_by_scenario(top_features_selection)
 
     # 3. Kreiranje foldera za CSV logove i grafike ako ne postoje.
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     GRAPHS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 4. Cuvanje liste izabranih top atributa.
+    # 4. Cuvanje odvojenih lista izabranih top atributa.
     save_csv_if_changed(
-        format_top_features_selection(top_features_selection),
-        TOP_FEATURES_SELECTION_PATH,
+        format_top_features_selection(top_features_selection["top_features_with_G1_G2"]),
+        TOP_FEATURES_WITH_G1_G2_PATH,
+        PROJECT_ROOT,
+    )
+    save_csv_if_changed(
+        format_top_features_selection(
+            top_features_selection["top_features_without_G1_G2"]
+        ),
+        TOP_FEATURES_WITHOUT_G1_G2_PATH,
         PROJECT_ROOT,
     )
 
