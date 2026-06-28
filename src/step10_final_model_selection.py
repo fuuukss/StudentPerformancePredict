@@ -24,7 +24,7 @@ FINAL_MODEL_DIR = PROJECT_ROOT / "models" / "final"
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"
 TEST_PATH = SPLIT_DIR / "test.csv"
-TOP_FEATURES_SELECTION_PATH = STEP09_LOGS_DIR / "top_features_selection.csv"
+TOP_FEATURES_WITH_G1_G2_PATH = STEP09_LOGS_DIR / "top_features_with_G1_G2.csv"
 
 FINAL_MODEL_REPORT_PATH = LOGS_DIR / "final_model_report.csv"
 FINAL_MODEL_PREDICTIONS_PATH = LOGS_DIR / "final_model_predictions.csv"
@@ -111,10 +111,7 @@ def calculate_metrics(y_true, y_pred):
 
 def get_final_feature_columns():
     """Vraca listu atributa za izabrani finalni top_features scenario."""
-    top_features_selection = pd.read_csv(TOP_FEATURES_SELECTION_PATH)
-    final_features = top_features_selection[
-        top_features_selection["top_features_scenario"] == FINAL_SCENARIO
-    ].copy()
+    final_features = pd.read_csv(TOP_FEATURES_WITH_G1_G2_PATH)
     final_features["rank"] = final_features["rank"].astype(int)
 
     return final_features.sort_values("rank")["feature"].tolist()
@@ -154,15 +151,10 @@ def train_and_save_final_model(train_df, validation_df, test_df, feature_columns
     }
     joblib.dump(final_model_bundle, FINAL_MODEL_PATH)
 
-    return final_test_metrics, predictions_report, len(train_validation_df)
+    return final_test_metrics, predictions_report
 
 
-def create_final_model_report(
-    final_test_metrics,
-    train_validation_rows,
-    test_rows,
-    feature_columns,
-):
+def create_final_model_report(final_test_metrics):
     """Kreira report sa finalnim izborom modela."""
     return pd.DataFrame(
         [
@@ -172,13 +164,7 @@ def create_final_model_report(
                 ).as_posix(),
                 "scenario": FINAL_SCENARIO,
                 "model": FINAL_MODEL_NAME,
-                "model_version": FINAL_MODEL_VERSION,
                 "parameters": FINAL_MODEL_PARAMETERS,
-                "selected_features": ", ".join(feature_columns),
-                "number_of_features": len(feature_columns),
-                "trained_on": "train+validation",
-                "train_validation_rows": train_validation_rows,
-                "test_rows": test_rows,
                 "final_test_MAE": final_test_metrics["MAE"],
                 "final_test_RMSE": final_test_metrics["RMSE"],
                 "final_test_R2": final_test_metrics["R2"],
@@ -311,13 +297,11 @@ def main():
 
     # 2. Treniranje finalnog modela na train+validation skupu i cuvanje modela.
     final_feature_columns = get_final_feature_columns()
-    final_test_metrics, predictions_report, train_validation_rows = (
-        train_and_save_final_model(
-            train_df,
-            validation_df,
-            test_df,
-            final_feature_columns,
-        )
+    final_test_metrics, predictions_report = train_and_save_final_model(
+        train_df,
+        validation_df,
+        test_df,
+        final_feature_columns,
     )
 
     # 3. Cuvanje predikcija i grafika finalnog modela.
@@ -329,12 +313,7 @@ def main():
     create_final_model_graphs(final_test_metrics, predictions_report)
 
     # 4. Cuvanje finalnog report-a.
-    final_model_report = create_final_model_report(
-        final_test_metrics,
-        train_validation_rows,
-        len(test_df),
-        final_feature_columns,
-    )
+    final_model_report = create_final_model_report(final_test_metrics)
     save_csv_if_changed(
         format_report(final_model_report),
         FINAL_MODEL_REPORT_PATH,

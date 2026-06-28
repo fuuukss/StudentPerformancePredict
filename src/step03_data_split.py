@@ -92,8 +92,8 @@ def create_split_report(original_df, train_df, validation_df, test_df):
             "Opis": "Zakljucak",
             "Vrednost": (
                 "Dataset je jednom podeljen na train, validation i test skup. "
-                "Isti redovi se koriste za scenarije sa G1/G2 i bez G1/G2, "
-                "kako bi poredjenje modela bilo fer."
+                "Svi modeli i svi scenariji koriste iste redove iz ove podele, "
+                "cime je poredjenje modela fer i ponovljivo."
             ),
         },
     ]

@@ -17,16 +17,11 @@ LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step08_feature_importance"
 GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step08_feature_importance"
 
 TRAIN_PATH = SPLIT_DIR / "train.csv"
-VALIDATION_PATH = SPLIT_DIR / "validation.csv"
-TEST_PATH = SPLIT_DIR / "test.csv"
-FEATURE_IMPORTANCE_REPORT_PATH = LOGS_DIR / "feature_importance_report.csv"
-DETAILED_FEATURE_IMPORTANCE_REPORT_PATH = (
-    LOGS_DIR / "feature_importance_detailed_report.csv"
-)
+WITH_G1_G2_REPORT_PATH = LOGS_DIR / "feature_importance_with_G1_G2.csv"
+WITHOUT_G1_G2_REPORT_PATH = LOGS_DIR / "feature_importance_without_G1_G2.csv"
 
 WITH_G1_G2_GRAPH_PATH = GRAPHS_DIR / "feature_importance_with_G1_G2.png"
 WITHOUT_G1_G2_GRAPH_PATH = GRAPHS_DIR / "feature_importance_without_G1_G2.png"
-COMBINED_GRAPH_PATH = GRAPHS_DIR / "feature_importance.png"
 
 TARGET_COLUMN = "G3"
 RANDOM_STATE = 42
@@ -246,7 +241,7 @@ def create_feature_importance_reports(train_df):
     detailed_report = pd.concat(detailed_reports, ignore_index=True)
     aggregated_report = aggregate_importance(detailed_report)
 
-    return aggregated_report, detailed_report
+    return aggregated_report
 
 
 def format_report(report):
@@ -255,6 +250,14 @@ def format_report(report):
     report["importance"] = report["importance"].map(format_value)
 
     return report
+
+
+def get_scenario_report(report, scenario_name):
+    """Vraca report za jedan scenario bez interne scenario kolone."""
+    scenario_report = report[report["scenario"] == scenario_name].copy()
+    scenario_report = scenario_report.sort_values("rank").reset_index(drop=True)
+
+    return scenario_report[["rank", "feature", "importance"]]
 
 
 def save_graph(path):
@@ -306,21 +309,8 @@ def create_single_scenario_graph(report, scenario_name, path):
     save_graph(path)
 
 
-def create_combined_graph(report):
-    """Kreira zajednicki grafik sa oba scenarija."""
-    fig, axes = plt.subplots(1, 2, figsize=(18, 7))
-    fig.suptitle("Random Forest feature importance po scenarijima", fontsize=14)
-
-    for axis, scenario_name in zip(axes, SCENARIO_ORDER):
-        draw_feature_importance_subplot(axis, report, scenario_name)
-
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
-
-    save_graph(COMBINED_GRAPH_PATH)
-
-
 def create_feature_importance_graphs(report):
-    """Kreira pojedinacne i zajednicki feature importance grafik."""
+    """Kreira pojedinacne feature importance grafike."""
     create_single_scenario_graph(
         report,
         "with_G1_G2",
@@ -331,7 +321,6 @@ def create_feature_importance_graphs(report):
         "without_G1_G2",
         WITHOUT_G1_G2_GRAPH_PATH,
     )
-    create_combined_graph(report)
 
 
 def print_top_features(report):
@@ -343,29 +332,25 @@ def print_top_features(report):
 
 
 def main():
-    # 1. Ucitavanje prethodno sacuvanih train, validation i test skupova.
+    # 1. Ucitavanje prethodno sacuvanog train skupa.
     train_df = pd.read_csv(TRAIN_PATH)
-    pd.read_csv(VALIDATION_PATH)
-    pd.read_csv(TEST_PATH)
 
     # 2. Kreiranje foldera za CSV logove i grafike ako ne postoje.
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     GRAPHS_DIR.mkdir(parents=True, exist_ok=True)
 
     # 3. Treniranje tuned Random Forest modela i izvlacenje importance vrednosti.
-    feature_importance_report, detailed_feature_importance_report = (
-        create_feature_importance_reports(train_df)
-    )
+    feature_importance_report = create_feature_importance_reports(train_df)
 
-    # 4. Cuvanje agregiranog reporta i detaljnog reporta za dummy kolone.
+    # 4. Cuvanje odvojenih feature importance reporta po scenarijima.
     save_csv_if_changed(
-        format_report(feature_importance_report),
-        FEATURE_IMPORTANCE_REPORT_PATH,
+        format_report(get_scenario_report(feature_importance_report, "with_G1_G2")),
+        WITH_G1_G2_REPORT_PATH,
         PROJECT_ROOT,
     )
     save_csv_if_changed(
-        format_report(detailed_feature_importance_report),
-        DETAILED_FEATURE_IMPORTANCE_REPORT_PATH,
+        format_report(get_scenario_report(feature_importance_report, "without_G1_G2")),
+        WITHOUT_G1_G2_REPORT_PATH,
         PROJECT_ROOT,
     )
 

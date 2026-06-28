@@ -12,4 +12,4 @@ Test procenat,15.10
 Sacuvani train skup,data/split/train.csv
 Sacuvani validation skup,data/split/validation.csv
 Sacuvani test skup,data/split/test.csv
-Zakljucak,"Dataset je jednom podeljen na train, validation i test skup. Isti redovi se koriste za scenarije sa G1/G2 i bez G1/G2, kako bi poredjenje modela bilo fer."
+Zakljucak,"Dataset je jednom podeljen na train, validation i test skup. Svi modeli i svi scenariji koriste iste redove iz ove podele, cime je poredjenje modela fer i ponovljivo."

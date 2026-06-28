@@ -1,5 +1,5 @@
-﻿scenario,model,best_parameters,selection_metric,number_of_features,train_rows,validation_rows,test_rows,validation_MAE,validation_RMSE,validation_R2,test_MAE,test_RMSE,test_R2
-with_G1_G2,Ridge Regression,alpha=10.0,validation_RMSE,32,454,97,98,0.7464,1.0457,0.8888,0.8256,1.3370,0.8518
-with_G1_G2,RandomForestRegressor,n_estimators=100; max_depth=5; min_samples_leaf=5,validation_RMSE,32,454,97,98,0.6553,0.8831,0.9207,0.8287,1.4138,0.8343
-without_G1_G2,Ridge Regression,alpha=100.0,validation_RMSE,30,454,97,98,2.0021,2.7782,0.2148,2.1474,2.9202,0.2929
-without_G1_G2,RandomForestRegressor,n_estimators=100; max_depth=10; min_samples_leaf=2,validation_RMSE,30,454,97,98,2.0547,2.7633,0.2232,2.1991,2.9108,0.2974
+﻿scenario,model,best_parameters,selection_metric,validation_MAE,validation_RMSE,validation_R2,test_MAE,test_RMSE,test_R2
+with_G1_G2,Ridge Regression,alpha=10.0,validation_RMSE,0.7464,1.0457,0.8888,0.8256,1.3370,0.8518
+with_G1_G2,RandomForestRegressor,n_estimators=100; max_depth=5; min_samples_leaf=5,validation_RMSE,0.6553,0.8831,0.9207,0.8287,1.4138,0.8343
+without_G1_G2,Ridge Regression,alpha=100.0,validation_RMSE,2.0021,2.7782,0.2148,2.1474,2.9202,0.2929
+without_G1_G2,RandomForestRegressor,n_estimators=100; max_depth=10; min_samples_leaf=2,validation_RMSE,2.0547,2.7633,0.2232,2.1991,2.9108,0.2974

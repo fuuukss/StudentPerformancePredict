@@ -196,11 +196,6 @@ def tune_on_validation(train_df, validation_df):
                         "scenario": scenario_name,
                         "model": model_name,
                         "parameters": format_parameters(parameters),
-                        "number_of_features": len(feature_columns),
-                        "numeric_features": len(scenario["numeric_features"]),
-                        "categorical_features": len(scenario["categorical_features"]),
-                        "train_rows": len(train_df),
-                        "validation_rows": len(validation_df),
                         "validation_MAE": validation_metrics["MAE"],
                         "validation_RMSE": validation_metrics["RMSE"],
                         "validation_R2": validation_metrics["R2"],
@@ -277,10 +272,6 @@ def create_tuning_summary(details_report, train_df, validation_df, test_df):
                 "model": model_name,
                 "best_parameters": best_row["parameters"],
                 "selection_metric": "validation_RMSE",
-                "number_of_features": len(feature_columns),
-                "train_rows": len(train_df),
-                "validation_rows": len(validation_df),
-                "test_rows": len(test_df),
                 "validation_MAE": best_row["validation_MAE"],
                 "validation_RMSE": best_row["validation_RMSE"],
                 "validation_R2": best_row["validation_R2"],
@@ -296,6 +287,13 @@ def create_tuning_summary(details_report, train_df, validation_df, test_df):
 def format_report_metrics(report, metric_columns):
     """Formatira numericke kolone u reportu za citljiv CSV izlaz."""
     report = report.copy()
+
+    if "is_best" in report.columns:
+        report = report.sort_values(
+            ["is_best", "scenario", "model", "validation_RMSE"],
+            ascending=[False, True, True, True],
+        ).reset_index(drop=True)
+
     report[metric_columns] = report[metric_columns].map(format_value)
 
     if "is_best" in report.columns:
