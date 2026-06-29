@@ -13,8 +13,8 @@ from csv_utils import relative_path, save_csv_if_changed
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPLIT_DIR = PROJECT_ROOT / "data" / "split"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step08_feature_importance"
-GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step08_feature_importance"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step09_feature_importance"
+GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step09_feature_importance"
 
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 WITH_G1_G2_REPORT_PATH = LOGS_DIR / "feature_importance_with_G1_G2.csv"

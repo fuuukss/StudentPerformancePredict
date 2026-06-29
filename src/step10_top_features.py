@@ -18,17 +18,17 @@ from csv_utils import relative_path, save_csv_if_changed
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPLIT_DIR = PROJECT_ROOT / "data" / "split"
-STEP06_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step06_hyperparameter_tuning"
-STEP08_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step08_feature_importance"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step09_top_features"
-GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step09_top_features"
+STEP07_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step07_hyperparameter_tuning"
+STEP09_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step09_feature_importance"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step10_top_features"
+GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step10_top_features"
 
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"
 TEST_PATH = SPLIT_DIR / "test.csv"
-TUNING_SUMMARY_PATH = STEP06_LOGS_DIR / "hyperparameter_tuning_summary.csv"
-WITH_G1_G2_IMPORTANCE_PATH = STEP08_LOGS_DIR / "feature_importance_with_G1_G2.csv"
-WITHOUT_G1_G2_IMPORTANCE_PATH = STEP08_LOGS_DIR / "feature_importance_without_G1_G2.csv"
+TUNING_SUMMARY_PATH = STEP07_LOGS_DIR / "hyperparameter_tuning_summary.csv"
+WITH_G1_G2_IMPORTANCE_PATH = STEP09_LOGS_DIR / "feature_importance_with_G1_G2.csv"
+WITHOUT_G1_G2_IMPORTANCE_PATH = STEP09_LOGS_DIR / "feature_importance_without_G1_G2.csv"
 
 TOP_FEATURES_WITH_G1_G2_PATH = LOGS_DIR / "top_features_with_G1_G2.csv"
 TOP_FEATURES_WITHOUT_G1_G2_PATH = LOGS_DIR / "top_features_without_G1_G2.csv"

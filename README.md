@@ -47,15 +47,15 @@ Redosled pokretanja step skripti u PowerShell-u:
 ```powershell
 .\.venv\Scripts\python.exe .\src\step01_data_preparation.py
 .\.venv\Scripts\python.exe .\src\step02_eda.py
-.\.venv\Scripts\python.exe .\src\step02b_anomaly_analysis.py
-.\.venv\Scripts\python.exe .\src\step03_data_split.py
-.\.venv\Scripts\python.exe .\src\step04_model_training.py
-.\.venv\Scripts\python.exe .\src\step05_model_comparison_graphs.py
-.\.venv\Scripts\python.exe .\src\step06_hyperparameter_tuning.py
-.\.venv\Scripts\python.exe .\src\step07_tuning_graphs.py
-.\.venv\Scripts\python.exe .\src\step08_feature_importance.py
-.\.venv\Scripts\python.exe .\src\step09_top_features.py
-.\.venv\Scripts\python.exe .\src\step10_final_model_selection.py
+.\.venv\Scripts\python.exe .\src\step03_anomaly_analysis.py
+.\.venv\Scripts\python.exe .\src\step04_data_split.py
+.\.venv\Scripts\python.exe .\src\step05_model_training.py
+.\.venv\Scripts\python.exe .\src\step06_model_comparison_graphs.py
+.\.venv\Scripts\python.exe .\src\step07_hyperparameter_tuning.py
+.\.venv\Scripts\python.exe .\src\step08_tuning_graphs.py
+.\.venv\Scripts\python.exe .\src\step09_feature_importance.py
+.\.venv\Scripts\python.exe .\src\step10_top_features.py
+.\.venv\Scripts\python.exe .\src\step11_final_model_selection.py
 ```
 
 ## Korišćenje finalnog modela
@@ -82,7 +82,7 @@ streamlit run .\src\streamlit_app.py
 
 Najbolji rezultat daje scenario sa `G1/G2`, jer su prethodne ocene veoma značajni atributi za predikciju završne ocene. Scenario bez `G1/G2` ima slabije metrike, ali je praktično koristan za raniju procenu uspeha učenika.
 
-Dodatna analiza ekstremnih numeričkih vrednosti i retkih kategorijskih vrednosti nalazi se u `step02b_anomaly_analysis.py`. Numerički atributi proveravaju se IQR metodom, a kategorijski kroz broj jedinstvenih i retkih vrednosti. Analiza ne uklanja redove i ne menja dataset, splitove, modele ni rezultate treniranja.
+Dodatna analiza ekstremnih numeričkih vrednosti i retkih kategorijskih vrednosti nalazi se u `step03_anomaly_analysis.py`. Numerički atributi proveravaju se IQR metodom, a kategorijski kroz broj jedinstvenih i retkih vrednosti. Analiza ne uklanja redove i ne menja dataset, splitove, modele ni rezultate treniranja.
 
 Finalni model je eksportovan u:
 

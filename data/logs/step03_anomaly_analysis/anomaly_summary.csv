@@ -3,7 +3,6 @@ Ukupan broj redova u dataset-u,649
 Broj numeričkih atributa analiziranih IQR metodom,16
 Broj atributa kod kojih IQR pronalazi ekstremne vrednosti,11
 Ukupan broj potencijalnih IQR outlier vrednosti,360
-Broj redova označenih kao IQR ekstrem za absences ili G3,37
 Broj učenika sa G3 = 0,15
 Maksimalan broj izostanaka,32
 Broj kategorijskih atributa,17

@@ -12,10 +12,10 @@ MODEL_COMPARISON_REPORT_PATH = (
     PROJECT_ROOT
     / "data"
     / "logs"
-    / "step04_model_training"
+    / "step05_model_training"
     / "model_comparison_report.csv"
 )
-GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step05_model_comparison"
+GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step06_model_comparison"
 
 VALIDATION_METRICS_GRAPH_PATH = GRAPHS_DIR / "validation_metrics_comparison.png"
 TEST_METRICS_GRAPH_PATH = GRAPHS_DIR / "test_metrics_comparison.png"

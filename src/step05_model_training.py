@@ -16,7 +16,7 @@ from csv_utils import save_csv_if_changed
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPLIT_DIR = PROJECT_ROOT / "data" / "split"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step04_model_training"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step05_model_training"
 
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"

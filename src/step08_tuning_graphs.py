@@ -12,17 +12,17 @@ DEFAULT_RESULTS_PATH = (
     PROJECT_ROOT
     / "data"
     / "logs"
-    / "step04_model_training"
+    / "step05_model_training"
     / "model_comparison_report.csv"
 )
 TUNED_RESULTS_PATH = (
     PROJECT_ROOT
     / "data"
     / "logs"
-    / "step06_hyperparameter_tuning"
+    / "step07_hyperparameter_tuning"
     / "hyperparameter_tuning_summary.csv"
 )
-GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step07_tuning_graphs"
+GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step08_tuning_graphs"
 
 VALIDATION_TUNING_GRAPH_PATH = GRAPHS_DIR / "default_vs_tuned_validation.png"
 TEST_TUNING_GRAPH_PATH = GRAPHS_DIR / "default_vs_tuned_test.png"

@@ -15,20 +15,18 @@ if hasattr(sys.stdout, "reconfigure"):
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "student-por.csv"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step02b_anomaly_analysis"
-GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step02b_anomaly_analysis"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step03_anomaly_analysis"
+GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step03_anomaly_analysis"
 
 IQR_REPORT_PATH = LOGS_DIR / "iqr_outlier_report.csv"
 CATEGORICAL_REPORT_PATH = LOGS_DIR / "categorical_value_report.csv"
 SUMMARY_PATH = LOGS_DIR / "anomaly_summary.csv"
 
 NUMERIC_BOXPLOTS_PATH = GRAPHS_DIR / "numeric_boxplots.png"
-ABSENCES_VS_G3_OUTLIERS_PATH = GRAPHS_DIR / "absences_vs_g3_outliers.png"
 CATEGORICAL_UNIQUE_COUNTS_PATH = GRAPHS_DIR / "categorical_unique_counts.png"
 
 RARE_CATEGORY_THRESHOLD = 5
 BOXPLOT_COLUMNS = ["G1", "G2", "G3", "absences", "failures", "age"]
-OUTLIER_SCATTER_COLUMNS = ["absences", "G3"]
 ANALYSIS_CONCLUSION = (
     "Ekstremne numeričke vrednosti i retke kategorije nisu automatski "
     "greške i nisu uklonjene jer mogu predstavljati realne učenike i "
@@ -93,17 +91,6 @@ def create_iqr_report(df):
     return pd.DataFrame(report_rows)
 
 
-def get_iqr_outlier_mask(df, columns):
-    """Vraća redove koji su IQR ekstremi u bar jednoj izabranoj koloni."""
-    outlier_mask = pd.Series(False, index=df.index)
-
-    for column in columns:
-        _, _, _, lower_bound, upper_bound = calculate_iqr_bounds(df[column])
-        outlier_mask = outlier_mask | (df[column] < lower_bound) | (df[column] > upper_bound)
-
-    return outlier_mask
-
-
 def format_list(values):
     """Formatira listu vrednosti za čitljiviji CSV izlaz."""
     if not values:
@@ -138,8 +125,8 @@ def create_categorical_report(df):
     return pd.DataFrame(report_rows)
 
 
-def create_summary(df, iqr_report, categorical_report, scatter_outlier_count):
-    """Kreira kratak CSV sažetak najvažnijih nalaza step02b analize."""
+def create_summary(df, iqr_report, categorical_report):
+    """Kreira kratak CSV sažetak najvažnijih nalaza step03 analize."""
     summary_rows = [
         {"Opis": "Ukupan broj redova u dataset-u", "Vrednost": len(df)},
         {
@@ -153,10 +140,6 @@ def create_summary(df, iqr_report, categorical_report, scatter_outlier_count):
         {
             "Opis": "Ukupan broj potencijalnih IQR outlier vrednosti",
             "Vrednost": int(iqr_report["total_potential_outliers"].sum()),
-        },
-        {
-            "Opis": "Broj redova označenih kao IQR ekstrem za absences ili G3",
-            "Vrednost": scatter_outlier_count,
         },
         {"Opis": "Broj učenika sa G3 = 0", "Vrednost": int((df["G3"] == 0).sum())},
         {"Opis": "Maksimalan broj izostanaka", "Vrednost": df["absences"].max()},
@@ -193,34 +176,6 @@ def create_numeric_boxplots(df):
     save_graph(NUMERIC_BOXPLOTS_PATH)
 
 
-def create_absences_vs_g3_outliers_scatter(df, outlier_mask):
-    """Kreira scatter plot izostanaka i G3 ocene sa označenim IQR ekstremima."""
-    normal_rows = df[~outlier_mask]
-    outlier_rows = df[outlier_mask]
-
-    plt.figure(figsize=(8, 5))
-    plt.scatter(
-        normal_rows["absences"],
-        normal_rows["G3"],
-        alpha=0.6,
-        color="#4c78a8",
-        label="Ostali redovi",
-    )
-    plt.scatter(
-        outlier_rows["absences"],
-        outlier_rows["G3"],
-        alpha=0.85,
-        color="#e45756",
-        label="IQR ekstremi",
-    )
-    plt.title("Izostanci u odnosu na G3")
-    plt.xlabel("absences")
-    plt.ylabel("G3")
-    plt.legend()
-    plt.grid(alpha=0.25)
-    save_graph(ABSENCES_VS_G3_OUTLIERS_PATH)
-
-
 def create_categorical_unique_counts_graph(categorical_report):
     """Kreira bar graf broja jedinstvenih vrednosti po kategorijskom atributu."""
     sorted_report = categorical_report.sort_values("unique_value_count", ascending=False)
@@ -251,13 +206,7 @@ def main():
     # 3. Kreiranje IQR i kategorijskog izveštaja.
     iqr_report = create_iqr_report(df)
     categorical_report = create_categorical_report(df)
-    scatter_outlier_mask = get_iqr_outlier_mask(df, OUTLIER_SCATTER_COLUMNS)
-    summary = create_summary(
-        df,
-        iqr_report,
-        categorical_report,
-        int(scatter_outlier_mask.sum()),
-    )
+    summary = create_summary(df, iqr_report, categorical_report)
 
     # 4. Čuvanje CSV fajlova preko postojećeg helpera iz csv_utils.py.
     save_csv_if_changed(iqr_report, IQR_REPORT_PATH, PROJECT_ROOT)
@@ -266,7 +215,6 @@ def main():
 
     # 5. Kreiranje grafika za vizuelnu proveru ekstremnih i retkih vrednosti.
     create_numeric_boxplots(df)
-    create_absences_vs_g3_outliers_scatter(df, scatter_outlier_mask)
     create_categorical_unique_counts_graph(categorical_report)
 
     print("Analiza ekstremnih i retkih vrednosti je završena.")

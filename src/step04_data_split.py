@@ -10,7 +10,7 @@ from csv_utils import relative_path, save_csv_if_changed
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "student-por.csv"
 SPLIT_DIR = PROJECT_ROOT / "data" / "split"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step03_data_split"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step04_data_split"
 
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"

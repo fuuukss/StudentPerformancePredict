@@ -133,7 +133,7 @@ Zaključak EDA faze je da prethodne ocene `G1` i `G2` imaju ubedljivo najjaču v
 
 ## 5. Dodatna analiza ekstremnih i retkih vrednosti
 
-Pored osnovne provere opsega, urađena je dodatna analiza ekstremnih i retkih vrednosti u koraku `step02b_anomaly_analysis.py`. Cilj ovog koraka je bolje razumevanje vrednosti koje statistički odskaču ili se retko pojavljuju, a ne filtriranje podataka ili menjanje toka treniranja modela.
+Pored osnovne provere opsega, urađena je dodatna analiza ekstremnih i retkih vrednosti u koraku `step03_anomaly_analysis.py`. Cilj ovog koraka je bolje razumevanje vrednosti koje statistički odskaču ili se retko pojavljuju, a ne filtriranje podataka ili menjanje toka treniranja modela.
 
 Za numeričke atribute koristi se IQR metoda. Ona se zasniva na kvartilima, odnosno vrednostima koje dele sortirane podatke na delove. Donji kvartil `Q1` predstavlja vrednost ispod koje se nalazi približno 25% podataka, dok gornji kvartil `Q3` predstavlja vrednost ispod koje se nalazi približno 75% podataka. Razlika između `Q3` i `Q1` naziva se interkvartilni raspon, odnosno IQR, i pokazuje raspon srednjih 50% vrednosti u posmatranoj koloni.
 
@@ -143,9 +143,9 @@ IQR metoda koristi sledeće formule:
 IQR = Q3 - Q1
 donja granica = Q1 - 1.5 * IQR
 gornja granica = Q3 + 1.5 * IQR
+```
 
 Faktor 1.5 je standardno pravilo u IQR metodi i koristi se za određivanje granica izvan kojih se vrednosti smatraju potencijalno ekstremnim. On predstavlja kompromis: dovoljno je širok da ne označi previše normalnih vrednosti kao outlier-e, ali dovoljno osetljiv da izdvoji vrednosti koje značajno odskaču od srednjeg dela raspodele.
-```
 
 Vrednosti ispod donje granice ili iznad gornje granice označavaju se kao potencijalni outlier-i. To znači da statistički odskaču od većine vrednosti u koloni, ali ne znači automatski da su greške u podacima. Na primer, veći broj izostanaka, niska završna ocena ili veći broj prethodnih neuspeha mogu predstavljati realne učenike, a ne pogrešno unete podatke.
 
@@ -153,9 +153,9 @@ Za kategorijske atribute ne koristi se IQR, jer njihove vrednosti nisu numeričk
 
 Izveštaji ovog koraka nalaze se u:
 
-- `data/logs/step02b_anomaly_analysis/anomaly_summary.csv`;
-- `data/logs/step02b_anomaly_analysis/iqr_outlier_report.csv`;
-- `data/logs/step02b_anomaly_analysis/categorical_value_report.csv`.
+- `data/logs/step03_anomaly_analysis/anomaly_summary.csv`;
+- `data/logs/step03_anomaly_analysis/iqr_outlier_report.csv`;
+- `data/logs/step03_anomaly_analysis/categorical_value_report.csv`.
 
 Fajl `iqr_outlier_report.csv` sadrži red za svaki numerički atribut i kolone `Q1`, `Q3`, `IQR`, `lower_bound`, `upper_bound`, `below_lower_count`, `above_upper_count` i `total_potential_outliers`. Na taj način se za svaku numeričku kolonu vidi kako su izračunate IQR granice i koliko vrednosti se nalazi ispod ili iznad tih granica.
 
@@ -166,24 +166,17 @@ Sažetak dodatne analize:
 | IQR analiza numeričkih atributa | 16 atributa |
 | Atributi kod kojih IQR pronalazi ekstremne vrednosti | 11 od 16 |
 | Ukupan broj potencijalnih IQR outlier vrednosti | 360 |
-| Broj redova označenih kao IQR ekstrem za `absences` ili `G3` | 37 |
 | Broj učenika sa `G3 = 0` | 15 |
 | Maksimalan broj izostanaka | 32 |
 | Prag za retke kategorije | 5 |
 
 CSV analiza IQR outlier-a urađena je nad svih 16 numeričkih atributa. Grafik `numeric_boxplots.png` radi preglednosti prikazuje izabrane najvažnije numeričke atribute: `G1`, `G2`, `G3`, `absences`, `failures` i `age`. Ovi atributi su izdvojeni zato što su najlakši za tumačenje u kontekstu uspeha učenika: ocene direktno opisuju školski uspeh, `absences` prikazuje izostanke, `failures` prethodne neuspehe, a `age` osnovnu demografsku karakteristiku.
 
-![Boxplot numeričkih atributa](../data/graphs/step02b_anomaly_analysis/numeric_boxplots.png)
-
-Grafik `absences_vs_g3_outliers.png` tumači odnos izostanaka i završne ocene. Izabrani su baš `absences` i `G3` zato što je `G3` ciljna promenljiva koju model predviđa, dok je `absences` jedan od najrazumljivijih numeričkih atributa kod kog se pojavljuju ekstremne vrednosti. Veliki broj izostanaka je realno moguć u obrazovnom kontekstu i može biti povezan sa uspehom učenika, pa je korisno posebno proveriti kako se takvi slučajevi ponašaju u odnosu na završnu ocenu.
-
-Zato su kao IQR ekstremi označeni samo redovi koji su ekstremni po `absences` ili `G3`, a ne redovi koji odskaču u bilo kojoj od ostalih numeričkih kolona. Cilj ovog grafika nije prikaz svih IQR outlier-a iz celog dataset-a, već dodatno tumačenje odnosa između ekstremnog broja izostanaka i završne ocene.
-
-![Izostanci u odnosu na G3 sa označenim IQR ekstremima](../data/graphs/step02b_anomaly_analysis/absences_vs_g3_outliers.png)
+![Boxplot numeričkih atributa](../data/graphs/step03_anomaly_analysis/numeric_boxplots.png)
 
 Grafik `categorical_unique_counts.png` prikazuje broj jedinstvenih vrednosti po kategorijskom atributu. Ova provera je korisna zato što kod kategorijskih atributa ekstremnost ne može da se posmatra preko numeričkih granica kao kod IQR metode. Umesto toga, proverava se da li atributi imaju očekivan broj kategorija i da li se neke kategorije pojavljuju veoma retko.
 
-![Broj jedinstvenih vrednosti po kategorijskom atributu](../data/graphs/step02b_anomaly_analysis/categorical_unique_counts.png)
+![Broj jedinstvenih vrednosti po kategorijskom atributu](../data/graphs/step03_anomaly_analysis/categorical_unique_counts.png)
 
 Ukupan broj potencijalnih IQR outlier vrednosti nije isto što i broj redova, jer jedan red može biti ekstreman u više numeričkih kolona. Na primer, isti učenik može istovremeno imati veliki broj izostanaka i veoma nisku završnu ocenu, pa se u zbiru potencijalnih outlier vrednosti računa više puta.
 
@@ -191,7 +184,7 @@ Ekstremne numeričke vrednosti i retke kategorije nisu automatski greške. One m
 
 ## 6. Podela podataka
 
-Dataset je jednom podeljen na trening, validacioni i test skup.Izveštaj se nalazi u `data/logs/step03_data_split/split_report.csv`.
+Dataset je jednom podeljen na trening, validacioni i test skup. Izveštaj se nalazi u `data/logs/step04_data_split/split_report.csv`.
 
 Podela podataka je važna zato što model ne treba ocenjivati samo na podacima na kojima je učio. Ako bi se model trenirao i proveravao na istim podacima, rezultat bi mogao biti previše optimističan, jer bi model mogao dobro da zapamti trening primere, a da lošije radi na novim podacima.
 
@@ -290,7 +283,7 @@ Vrednost R2 bliža 1 znači da model dobro objašnjava varijaciju u podacima. Vr
 
 Za MAE i RMSE manje vrednosti su bolje. Za R2 veće vrednosti su bolje. MAE i RMSE su posebno korisni jer se direktno tumače kroz grešku u ocenama, dok R2 pokazuje koliko model ukupno dobro objašnjava završnu ocenu učenika.
 
-Sažetak iz `data/logs/step04_model_training/model_comparison_report.csv`:
+Sažetak iz `data/logs/step05_model_training/model_comparison_report.csv`:
 
 | Scenario | Model | Validation RMSE | Validation R2 | Test RMSE | Test R2 |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -301,9 +294,9 @@ Sažetak iz `data/logs/step04_model_training/model_comparison_report.csv`:
 | without_G1_G2 | Ridge Regression | 2.8668 | 0.1639 | 3.0243 | 0.2416 |
 | without_G1_G2 | RandomForestRegressor | 2.7779 | 0.2150 | 2.9105 | 0.2976 |
 
-![Poređenje validacionih metrika](../data/graphs/step05_model_comparison/validation_metrics_comparison.png)
+![Poređenje validacionih metrika](../data/graphs/step06_model_comparison/validation_metrics_comparison.png)
 
-![Poređenje test metrika](../data/graphs/step05_model_comparison/test_metrics_comparison.png)
+![Poređenje test metrika](../data/graphs/step06_model_comparison/test_metrics_comparison.png)
 
 Rezultati pokazuju da modeli sa `G1` i `G2` ostvaruju znatno bolje performanse od modela bez ovih atributa. To je očekivano, jer su prethodne ocene direktno povezane sa završnom ocenom. U EDA fazi je pokazano da je korelacija između `G2` i `G3` 0.92, a između `G1` i `G3` 0.83.
 
@@ -315,7 +308,7 @@ Zaključak ovog koraka je da prethodne ocene `G1` i `G2` imaju presudan uticaj n
 
 ## 8. Podešavanje hiperparametara
 
-Podešavanje hiperparametara sprovedeno je u koraku `step06_hyperparameter_tuning.py`, pomoću validacionog skupa. Hiperparametri su podešavanja modela koja nisu direktno naučena iz podataka, već se unapred zadaju (bira ih korisnik ili postupak pretrage) i utiču na način na koji model uči.
+Podešavanje hiperparametara sprovedeno je u koraku `step07_hyperparameter_tuning.py`, pomoću validacionog skupa. Hiperparametri su podešavanja modela koja nisu direktno naučena iz podataka, već se unapred zadaju (bira ih korisnik ili postupak pretrage) i utiču na način na koji model uči.
 
 Hiperparametri su podešavani za modele `Ridge Regression` i `RandomForestRegressor`. `DummyRegressor` nije podešavan, jer služi samo kao jednostavan baseline model i nema smisao optimizovati ga kao glavni prediktivni model.
 
@@ -368,7 +361,7 @@ Ovi hiperparametri su važni zato što kontrolišu složenost Random Forest mode
 
 Ručni grid search trenira model za svaku kombinaciju navedenih vrednosti i poredi rezultate na validacionom skupu. Najbolja kombinacija se bira prema najnižoj vrednosti `validation_RMSE`. Test skup se ne koristi za izbor hiperparametara, već se koristi tek nakon izbora najbolje kombinacije, kao provera ponašanja modela na neviđenim podacima. Ako bi se hiperparametri birali na osnovu test rezultata, test skup više ne bi predstavljao objektivnu procenu generalizacije modela.
 
-Sažetak iz `data/logs/step06_hyperparameter_tuning/hyperparameter_tuning_summary.csv`:
+Sažetak iz `data/logs/step07_hyperparameter_tuning/hyperparameter_tuning_summary.csv`:
 
 | Scenario | Model | Najbolji parametri | Validation RMSE | Test RMSE | Test R2 |
 | --- | --- | --- | ---: | ---: | ---: |
@@ -377,9 +370,9 @@ Sažetak iz `data/logs/step06_hyperparameter_tuning/hyperparameter_tuning_summar
 | without_G1_G2 | Ridge Regression | `alpha=100.0` | 2.7782 | 2.9202 | 0.2929 |
 | without_G1_G2 | RandomForestRegressor | `n_estimators=100; max_depth=10; min_samples_leaf=2` | 2.7633 | 2.9108 | 0.2974 |
 
-![Default i tuned modeli na validacionom skupu](../data/graphs/step07_tuning_graphs/default_vs_tuned_validation.png)
+![Default i tuned modeli na validacionom skupu](../data/graphs/step08_tuning_graphs/default_vs_tuned_validation.png)
 
-![Default i tuned modeli na test skupu](../data/graphs/step07_tuning_graphs/default_vs_tuned_test.png)
+![Default i tuned modeli na test skupu](../data/graphs/step08_tuning_graphs/default_vs_tuned_test.png)
 
 Rezultati pokazuju da podešavanje hiperparametara može poboljšati performanse modela, posebno na validacionom skupu. U scenariju `with_G1_G2`, `RandomForestRegressor` nakon podešavanja ima bolji validacioni RMSE nego u početnom modelu. Validacioni RMSE pada sa 0.9862 na 0.8831, što znači da podešeni hiperparametri bolje odgovaraju validacionom skupu.
 
@@ -389,7 +382,7 @@ Na osnovu ovog koraka vidi se da tuning može poboljšati rezultate, ali izbor f
 
 ## 9. Analiza značajnosti atributa
 
-Analiza značajnosti atributa urađena je u koraku `step08_feature_importance.py`. Cilj ovog koraka je da se proveri na koje ulazne atribute se model najviše oslanja pri predikciji završne ocene `G3`.
+Analiza značajnosti atributa urađena je u koraku `step09_feature_importance.py`. Cilj ovog koraka je da se proveri na koje ulazne atribute se model najviše oslanja pri predikciji završne ocene `G3`.
 
 Za procenu značajnosti atributa korišćen je `RandomForestRegressor`. Ovaj model je pogodan za feature importance analizu zato što je zasnovan na velikom broju stabala odlučivanja. Svako stablo tokom treniranja pravi podele podataka na osnovu atributa koji najbolje smanjuju grešku predikcije. Ako se neki atribut često koristi u važnim podelama i ako te podele značajno poboljšavaju predikciju, taj atribut dobija veći značaj.
 
@@ -401,14 +394,14 @@ Važno je naglasiti da feature importance ne znači nužno uzročno-posledičnu 
 
 Rezultati feature importance analize nalaze se u:
 
-- `data/logs/step08_feature_importance/feature_importance_with_G1_G2.csv`;
-- `data/logs/step08_feature_importance/feature_importance_without_G1_G2.csv`.
+- `data/logs/step09_feature_importance/feature_importance_with_G1_G2.csv`;
+- `data/logs/step09_feature_importance/feature_importance_without_G1_G2.csv`.
 
 U scenariju sa `G1/G2`, najvažniji atribut je `G2`, sa značajem 0.896595. To znači da se Random Forest model u ovom scenariju dominantno oslanja na drugu periodičnu ocenu pri predikciji završne ocene. Ovakav rezultat je očekivan, jer je u EDA fazi pokazano da `G2` ima veoma jaku korelaciju sa `G3`.
 
 Nakon `G2`, među značajnijim atributima pojavljuju se `absences`, `G1`, `age` i `reason`. Ipak, njihov značaj je znatno manji u odnosu na `G2`. To pokazuje da, kada su prethodne ocene dostupne, model najviše koristi direktne informacije o ranijem uspehu učenika, dok ostali atributi imaju pomoćnu ulogu.
 
-![Važnost atributa sa G1 i G2](../data/graphs/step08_feature_importance/feature_importance_with_G1_G2.png)
+![Važnost atributa sa G1 i G2](../data/graphs/step09_feature_importance/feature_importance_with_G1_G2.png)
 
 U scenariju bez `G1/G2`, model više nema pristup prethodnim ocenama, pa se oslanja na druge osobine učenika. Najvažniji atribut je `failures`, zatim `reason`, `absences`, `school`, `higher`, `age`, `Fedu`, `health`, `Dalc` i `studytime`.
 
@@ -420,7 +413,7 @@ Kada se `G1` i `G2` uklone, model više nema direktnu informaciju o prethodnom u
 
 Zbog ovoga se neki atributi pomeraju na listi ili ispadaju iz top 10. Na primer, `age` može imati određeni značaj kada su `G1` i `G2` prisutni, ali u scenariju bez prethodnih ocena drugi atributi postaju korisniji za model. Slično tome, `absences` ostaje važan u oba scenarija, ali njegov relativni položaj može da se promeni jer se promenio ceo skup informacija koje model ima na raspolaganju. Feature importance je relativna mera, pa se značaj jednog atributa uvek tumači u odnosu na ostale atribute koji su dostupni u tom scenariju.
 
-![Važnost atributa bez G1 i G2](../data/graphs/step08_feature_importance/feature_importance_without_G1_G2.png)
+![Važnost atributa bez G1 i G2](../data/graphs/step09_feature_importance/feature_importance_without_G1_G2.png)
 
 Za `Ridge Regression` nije posebno računata feature importance lista na isti način kao za Random Forest. Razlog je to što Ridge Regression daje koeficijente za transformisane ulazne kolone, a ne za originalne atribute u jednostavnom obliku. Nakon `OneHotEncoder` transformacije, jedan kategorijski atribut može biti pretvoren u više binarnih kolona, pa direktno poređenje koeficijenata nije uvek jednostavno za tumačenje.
 
@@ -459,6 +452,8 @@ U ovom koraku ponovo su trenirani `Ridge Regression` i `RandomForestRegressor`, 
 
 Performanse top features modela zatim su upoređene sa modelima koji koriste sve atribute. Time se proverava da li manji broj pažljivo izabranih atributa može da da isti ili bolji rezultat od kompletnog skupa atributa.
 
+CSV izlazi ovog koraka nalaze se u `data/logs/step10_top_features/`: `top_features_with_G1_G2.csv`, `top_features_without_G1_G2.csv`, `top_features_tuning_details.csv` i `top_features_model_comparison_report.csv`.
+
 Sažetak poređenja:
 
 | Scenario | Model | Validation RMSE | Test RMSE | Test R2 |
@@ -472,9 +467,9 @@ Sažetak poređenja:
 | without_G1_G2 | RandomForestRegressor | 2.7633 | 2.9108 | 0.2974 |
 | top_features_without_G1_G2 | RandomForestRegressor | 2.7076 | 3.0354 | 0.2360 |
 
-![Top features poređenje na validacionom skupu](../data/graphs/step09_top_features/validation_top_features_comparison.png)
+![Top features poređenje na validacionom skupu](../data/graphs/step10_top_features/validation_top_features_comparison.png)
 
-![Top features poređenje na test skupu](../data/graphs/step09_top_features/test_top_features_comparison.png)
+![Top features poređenje na test skupu](../data/graphs/step10_top_features/test_top_features_comparison.png)
 
 Rezultati pokazuju da je top features pristup posebno koristan u scenariju sa `G1/G2`. Kod `Ridge Regression` modela, smanjeni skup atributa daje bolji rezultat od punog skupa atributa. Test RMSE se smanjuje sa 1.3370 na 1.2796, a test R2 raste sa 0.8518 na 0.8642. To znači da je model sa 10 najvažnijih atributa ne samo jednostavniji, već i precizniji na test skupu.
 
@@ -496,7 +491,7 @@ Finalni model je eksportovan u:
 models/final/final_model.joblib
 ```
 
-Prema `data/logs/step10_final_model_selection/final_model_report.csv`, izabran je sledeći model:
+Prema `data/logs/step11_final_model_selection/final_model_report.csv`, izabran je sledeći model:
 
 | Stavka | Vrednost |
 | --- | --- |
@@ -513,7 +508,7 @@ Kao finalni algoritam izabran je `Ridge Regression`. Iako je `RandomForestRegres
 
 Važno je naglasiti da finalni model koristi `G1` i `G2`. To je njegova glavna prednost, ali i praktično ograničenje. Kada su prethodne ocene dostupne, model može veoma precizno da predvidi završnu ocenu. Međutim, ako se želi rana procena uspeha pre formiranja `G1` i `G2`, ovaj finalni model nije najpogodniji i tada bi trebalo koristiti slabiji, ali ranije primenljiv scenario bez `G1/G2`.
 
-![Metrike finalnog modela](../data/graphs/step10_final_model_selection/final_model_metrics.png)
+![Metrike finalnog modela](../data/graphs/step11_final_model_selection/final_model_metrics.png)
 
 Metrike finalnog modela pokazuju da model ostvaruje dobar rezultat na test skupu. MAE od 0.7655 znači da model u proseku greši za manje od jedne ocene. Pošto je ciljna promenljiva `G3` izražena na skali od 0 do 20, ova greška je praktično mala i lako se tumači.
 
@@ -523,7 +518,7 @@ R2 iznosi 0.8655. To znači da model objašnjava veliki deo varijanse završne o
 
 Graf stvarnih i predviđenih vrednosti prikazuje koliko su predikcije modela blizu stvarnih vrednosti. Na grafiku se porede stvarna ocena `G3` i predviđena ocena. Idealno bi bilo da sve tačke leže na dijagonali, jer bi to značilo da je svaka predikcija jednaka stvarnoj vrednosti.
 
-![Stvarne i predviđene vrednosti](../data/graphs/step10_final_model_selection/final_model_actual_vs_predicted.png)
+![Stvarne i predviđene vrednosti](../data/graphs/step11_final_model_selection/final_model_actual_vs_predicted.png)
 
 Tačke koje su blizu dijagonale predstavljaju dobre predikcije. Tačke koje su dalje od dijagonale predstavljaju slučajeve kod kojih je model napravio veću grešku. Ovaj graf je koristan jer ne prikazuje samo jednu zbirnu metriku, već omogućava vizuelnu proveru ponašanja modela kroz različite vrednosti završne ocene.
 
@@ -533,7 +528,7 @@ Residual graf prikazuje razliku između stvarne i predviđene vrednosti. Residua
 residual = stvarna G3 - predviđena G3
 ```
 
-![Residual analiza finalnog modela](../data/graphs/step10_final_model_selection/final_model_residuals.png)
+![Residual analiza finalnog modela](../data/graphs/step11_final_model_selection/final_model_residuals.png)
 
 Ako je residual blizu nule, predikcija je dobra. Pozitivan residual znači da je stvarna ocena veća od predviđene, odnosno da je model potcenio učenika. Negativan residual znači da je stvarna ocena manja od predviđene, odnosno da je model precenio učenika.
 

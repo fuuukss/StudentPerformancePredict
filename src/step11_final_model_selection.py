@@ -16,15 +16,15 @@ from csv_utils import relative_path, save_csv_if_changed
 # Putanje do osnovnih foldera i fajlova u projektu.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPLIT_DIR = PROJECT_ROOT / "data" / "split"
-STEP09_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step09_top_features"
-LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step10_final_model_selection"
-GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step10_final_model_selection"
+STEP10_LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step10_top_features"
+LOGS_DIR = PROJECT_ROOT / "data" / "logs" / "step11_final_model_selection"
+GRAPHS_DIR = PROJECT_ROOT / "data" / "graphs" / "step11_final_model_selection"
 FINAL_MODEL_DIR = PROJECT_ROOT / "models" / "final"
 
 TRAIN_PATH = SPLIT_DIR / "train.csv"
 VALIDATION_PATH = SPLIT_DIR / "validation.csv"
 TEST_PATH = SPLIT_DIR / "test.csv"
-TOP_FEATURES_WITH_G1_G2_PATH = STEP09_LOGS_DIR / "top_features_with_G1_G2.csv"
+TOP_FEATURES_WITH_G1_G2_PATH = STEP10_LOGS_DIR / "top_features_with_G1_G2.csv"
 
 FINAL_MODEL_REPORT_PATH = LOGS_DIR / "final_model_report.csv"
 FINAL_MODEL_PREDICTIONS_PATH = LOGS_DIR / "final_model_predictions.csv"
