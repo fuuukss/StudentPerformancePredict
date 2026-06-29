@@ -15,7 +15,7 @@ data/logs/      CSV izveštaji po koracima
 data/graphs/    PNG grafici po koracima
 models/final/   eksportovan finalni model
 src/            Python skripte projekta
-docs/           dokumentacija i walkthrough notebook
+docs/           dokumentacija projekta
 ```
 
 ## Korišćeni modeli
@@ -47,6 +47,7 @@ Redosled pokretanja step skripti u PowerShell-u:
 ```powershell
 .\.venv\Scripts\python.exe .\src\step01_data_preparation.py
 .\.venv\Scripts\python.exe .\src\step02_eda.py
+.\.venv\Scripts\python.exe .\src\step02b_anomaly_analysis.py
 .\.venv\Scripts\python.exe .\src\step03_data_split.py
 .\.venv\Scripts\python.exe .\src\step04_model_training.py
 .\.venv\Scripts\python.exe .\src\step05_model_comparison_graphs.py
@@ -81,6 +82,8 @@ streamlit run .\src\streamlit_app.py
 
 Najbolji rezultat daje scenario sa `G1/G2`, jer su prethodne ocene veoma značajni atributi za predikciju završne ocene. Scenario bez `G1/G2` ima slabije metrike, ali je praktično koristan za raniju procenu uspeha učenika.
 
+Dodatna analiza ekstremnih numeričkih vrednosti i retkih kategorijskih vrednosti nalazi se u `step02b_anomaly_analysis.py`. Numerički atributi proveravaju se IQR metodom, a kategorijski kroz broj jedinstvenih i retkih vrednosti. Analiza ne uklanja redove i ne menja dataset, splitove, modele ni rezultate treniranja.
+
 Finalni model je eksportovan u:
 
 ```text
@@ -90,5 +93,3 @@ models/final/final_model.joblib
 ## Dokumentacija
 
 Detaljna dokumentacija nalazi se u `docs/project_documentation.md`.
-
-Walkthrough notebook nalazi se u `docs/student_performance_walkthrough.ipynb`.

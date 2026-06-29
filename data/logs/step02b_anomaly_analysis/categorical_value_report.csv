@@ -1,0 +1,18 @@
+﻿attribute,unique_value_count,unique_values,most_common_value,most_common_count,rarest_value,rarest_count,rare_category_count,rare_categories
+school,2,GP; MS,GP,423,MS,226,0,Nema
+sex,2,F; M,F,383,M,266,0,Nema
+address,2,U; R,U,452,R,197,0,Nema
+famsize,2,GT3; LE3,GT3,457,LE3,192,0,Nema
+Pstatus,2,T; A,T,569,A,80,0,Nema
+Mjob,5,other; services; at_home; teacher; health,other,258,health,48,0,Nema
+Fjob,5,other; services; at_home; teacher; health,other,367,health,23,0,Nema
+reason,4,course; home; reputation; other,course,285,other,72,0,Nema
+guardian,3,mother; father; other,mother,455,other,41,0,Nema
+schoolsup,2,no; yes,no,581,yes,68,0,Nema
+famsup,2,yes; no,yes,398,no,251,0,Nema
+paid,2,no; yes,no,610,yes,39,0,Nema
+activities,2,no; yes,no,334,yes,315,0,Nema
+nursery,2,yes; no,yes,521,no,128,0,Nema
+higher,2,yes; no,yes,580,no,69,0,Nema
+internet,2,yes; no,yes,498,no,151,0,Nema
+romantic,2,no; yes,no,410,yes,239,0,Nema

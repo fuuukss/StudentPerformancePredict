@@ -39,7 +39,7 @@ Prema `features_overview.csv`, svi atributi osim `G3` mogu biti ulazni atributi 
 
 ## 3. Početno preprocesiranje podataka
 
-U koraku početne pripreme provereni su nedostajuće vrednosti, duplikati, osnovni opsezi ocena i očigledne anomalije. Prema `data/logs/step01_data_preparation/preprocessing_report.csv`, dataset nema nedostajuće vrednosti ni duplikate, a ocene `G1`, `G2` i `G3` nalaze se u očekivanom opsegu 0-20.
+U koraku početne pripreme provereni su nedostajuće vrednosti, duplikati, osnovni opsezi ocena i očigledne greške za uklanjanje. Prema `data/logs/step01_data_preparation/preprocessing_report.csv`, dataset nema nedostajuće vrednosti ni duplikate, a ocene `G1`, `G2` i `G3` nalaze se u očekivanom opsegu 0-20.
 
 | Provera | Rezultat |
 | --- | --- |
@@ -52,7 +52,9 @@ U koraku početne pripreme provereni su nedostajuće vrednosti, duplikati, osnov
 
 Nije bilo očiglednih redova ili atributa za automatsko uklanjanje. Maksimalan broj izostanaka je 32, što se posmatra kao potencijalno ekstremna, ali moguća realna vrednost.
 
-Enkodiranje kategorijskih atributa i skaliranje numeričkih atributa nisu urađeni unapred nad celim datasetom. Umesto toga, `OneHotEncoder` i `StandardScaler` koriste se kasnije unutar `sklearn Pipeline` objekata tokom treniranja modela. Time se sprečava data leakage, jer se transformacije uče samo na trening delu podataka.
+Enkodiranje kategorijskih atributa i skaliranje numeričkih atributa nisu urađeni unapred nad celim datasetom. Umesto toga, `OneHotEncoder` i `StandardScaler` koriste se kasnije unutar `sklearn Pipeline` objekata tokom treniranja modela. `StandardScaler` skalira numeričke atribute tako da budu uporedivih razmera, dok `OneHotEncoder` pretvara kategorijske vrednosti u numeričke indikatore koje modeli mogu da koriste.
+
+Ovakav pristup sprečava data leakage. Transformatori se fituju samo na trening delu podataka, a zatim se ista naučena transformacija primenjuje na validacioni, test i nove korisničke unose. Validation i test skup zato ne učestvuju u učenju preprocessing-a.
 
 ## 4. Eksplorativna analiza podataka
 
@@ -96,9 +98,49 @@ Broj izostanaka ima slabu negativnu korelaciju sa završnom ocenom, ali distribu
 
 Vrednosti poput `G3 = 0` i većeg broja izostanaka nisu automatski obrisane, jer mogu predstavljati realne slučajeve u obrazovnom kontekstu.
 
-## 5. Podela podataka
+## 5. Dodatna analiza ekstremnih i retkih vrednosti
 
-Dataset je jednom podeljen na trening, validacioni i test skup. Izveštaj se nalazi u `data/logs/step03_data_split/split_report.csv`.
+Pored osnovne provere opsega, urađena je dodatna analiza ekstremnih i retkih vrednosti u koraku `step02b_anomaly_analysis.py`. Cilj ovog koraka je bolje razumevanje vrednosti koje statistički odskaču ili se retko pojavljuju, a ne filtriranje podataka ili menjanje toka treniranja modela.
+
+Za numeričke atribute koristi se IQR metoda. IQR metoda koristi kvartile i interkvartilni raspon:
+
+```text
+IQR = Q3 - Q1
+donja granica = Q1 - 1.5 * IQR
+gornja granica = Q3 + 1.5 * IQR
+```
+
+Vrednosti ispod donje granice ili iznad gornje granice označavaju se kao potencijalni outlier-i. To znači da statistički odskaču od većine vrednosti u koloni, ali ne znači automatski da su greške u podacima.
+
+Za kategorijske atribute ne koristi se IQR, jer njihove vrednosti nisu numeričke i nemaju prirodan redosled za računanje kvartila. Umesto toga proverava se broj jedinstvenih vrednosti po atributu i da li postoje kategorije koje se pojavljuju retko. U ovom projektu kategorija se smatra retkom ako se pojavljuje najviše 5 puta.
+
+Izveštaji ovog koraka nalaze se u:
+
+- `data/logs/step02b_anomaly_analysis/anomaly_summary.csv`;
+- `data/logs/step02b_anomaly_analysis/iqr_outlier_report.csv`;
+- `data/logs/step02b_anomaly_analysis/categorical_value_report.csv`.
+
+Sažetak dodatne analize:
+
+| Pokazatelj | Vrednost |
+| --- | ---: |
+| IQR analiza numeričkih atributa | 16 atributa |
+| Atributi kod kojih IQR pronalazi ekstremne vrednosti | 11 od 16 |
+| Broj učenika sa `G3 = 0` | 15 |
+| Maksimalan broj izostanaka | 32 |
+| Prag za retke kategorije | 5 |
+
+![Boxplot numeričkih atributa](../data/graphs/step02b_anomaly_analysis/numeric_boxplots.png)
+
+![Izostanci u odnosu na G3 sa označenim IQR ekstremima](../data/graphs/step02b_anomaly_analysis/absences_vs_g3_outliers.png)
+
+![Broj jedinstvenih vrednosti po kategorijskom atributu](../data/graphs/step02b_anomaly_analysis/categorical_unique_counts.png)
+
+Ekstremne numeričke vrednosti i retke kategorije nisu automatski greške. One mogu predstavljati realne učenike i realne situacije u dataset-u, pa redovi nisu uklonjeni. Ova analiza služi za proveru i bolje razumevanje podataka, a ne za filtriranje redova ili menjanje finalnog modela.
+
+## 6. Podela podataka
+
+Dataset je jednom podeljen na trening, validacioni i test skup. Trening skup služi za učenje modela, validacioni skup za izbor modela i hiperparametara, a test skup za finalnu proveru performansi na odvojenim podacima. Izveštaj se nalazi u `data/logs/step03_data_split/split_report.csv`.
 
 | Skup | Broj redova | Procenat |
 | --- | ---: | ---: |
@@ -106,9 +148,9 @@ Dataset je jednom podeljen na trening, validacioni i test skup. Izveštaj se nal
 | Validation | 97 | 14.95% |
 | Test | 98 | 15.10% |
 
-Svi modeli i svi scenariji koriste iste redove iz ove podele. Time je poređenje modela fer i ponovljivo. Validacioni skup se koristi za izbor modela i hiperparametara, dok se test skup koristi za finalnu proveru performansi.
+Svi modeli i svi scenariji koriste iste redove iz ove podele. Time je poređenje modela fer i ponovljivo, jer razlike u rezultatima dolaze od modela i atributa, a ne od drugačije podele podataka.
 
-## 6. Odabir i treniranje modela
+## 7. Odabir i treniranje modela
 
 U početnom poređenju trenirana su tri modela:
 
@@ -118,9 +160,11 @@ U početnom poređenju trenirana su tri modela:
 
 Korišćene metrike su:
 
-- MAE: prosečna apsolutna greška;
-- RMSE: koren srednje kvadratne greške;
-- R2: procenat objašnjene varijanse.
+- MAE: prosečna apsolutna greška, izražena u jedinicama ocene;
+- RMSE: koren srednje kvadratne greške, koji jače kažnjava veće greške;
+- R2: procenat objašnjene varijanse target promenljive.
+
+Za MAE i RMSE manje vrednosti su bolje. Za R2 veće vrednosti su bolje, dok vrednosti oko nule ili ispod nule znače da model ne objašnjava podatke bolje od veoma jednostavnog baseline pristupa.
 
 Sažetak iz `data/logs/step04_model_training/model_comparison_report.csv`:
 
@@ -139,9 +183,11 @@ Sažetak iz `data/logs/step04_model_training/model_comparison_report.csv`:
 
 Modeli sa `G1` i `G2` ostvaruju znatno bolje rezultate. To je očekivano, jer prethodne ocene imaju direktnu i jaku vezu sa završnom ocenom. Bez `G1/G2`, modeli i dalje nadmašuju baseline, ali sa mnogo skromnijim `R2` vrednostima.
 
-## 7. Podešavanje hiperparametara
+## 8. Podešavanje hiperparametara
 
-Podešavanje hiperparametara sprovedeno je pomoću validacionog skupa. Test skup nije korišćen za izbor hiperparametara, već samo za proveru nakon izbora.
+Podešavanje hiperparametara sprovedeno je pomoću validacionog skupa. Hiperparametri su podešavanja modela koja nisu direktno naučena iz podataka, već se biraju pre ili tokom treniranja, na primer `alpha` kod Ridge Regression modela ili `max_depth` i `min_samples_leaf` kod Random Forest modela.
+
+U skripti `step06_hyperparameter_tuning.py` korišćen je ručni grid search: unapred je definisana mala mreža kandidata, treniraju se sve kombinacije i porede se prema validacionom rezultatu. Test skup nije korišćen za izbor hiperparametara, već samo za proveru nakon izbora.
 
 Sažetak iz `data/logs/step06_hyperparameter_tuning/hyperparameter_tuning_summary.csv`:
 
@@ -158,9 +204,9 @@ Sažetak iz `data/logs/step06_hyperparameter_tuning/hyperparameter_tuning_summar
 
 Tuning donosi poboljšanje, posebno za `RandomForestRegressor` u scenariju sa `G1/G2`, gde validacioni RMSE pada sa 0.9862 na 0.8831. Ipak, razlika između validacionog i test rezultata pokazuje da izbor finalnog modela ne treba zasnivati samo na jednoj metrici, već i na generalizaciji, jednostavnosti i praktičnoj interpretabilnosti.
 
-## 8. Analiza značajnosti atributa
+## 9. Analiza značajnosti atributa
 
-Za procenu važnosti atributa korišćen je `RandomForestRegressor`. Rezultati se nalaze u:
+Feature importance pokazuje koliko se model oslanja na pojedinačne atribute pri predikciji. Za procenu važnosti atributa korišćen je `RandomForestRegressor`, jer ovaj model prirodno daje procenu doprinosa atributa na osnovu svojih stabala odlučivanja. Rezultati se nalaze u:
 
 - `data/logs/step08_feature_importance/feature_importance_with_G1_G2.csv`;
 - `data/logs/step08_feature_importance/feature_importance_without_G1_G2.csv`.
@@ -175,9 +221,9 @@ U scenariju bez `G1/G2`, model se oslanja na druge osobine učenika. Najvažniji
 
 Ovaj deo projekta ispunjava zahtev za odabir najznačajnijih atributa i dodatno objašnjava zašto se performanse značajno razlikuju između dva scenarija.
 
-## 9. Top features scenario
+## 10. Top features scenario
 
-U ovom koraku provereno je da li manji broj najvažnijih atributa može dati slične ili bolje rezultate od kompletnog skupa atributa. Korišćeni su fajlovi:
+Top features scenario proverava da li manji broj najvažnijih atributa može dati slične ili bolje rezultate od kompletnog skupa atributa. Ideja je da se dobije jednostavniji model za upotrebu i tumačenje, bez velikog gubitka kvaliteta. Korišćeni su fajlovi:
 
 - `data/logs/step09_top_features/top_features_with_G1_G2.csv`;
 - `data/logs/step09_top_features/top_features_without_G1_G2.csv`;
@@ -207,7 +253,7 @@ Sažetak poređenja:
 
 Top features pristup je posebno uspešan u scenariju sa `G1/G2`. `Ridge Regression` sa top atributima postiže bolji test RMSE od punog modela i koristi samo 10 atributa, što ga čini jednostavnijim za upotrebu i tumačenje.
 
-## 10. Izbor finalnog modela i analiza predikcija
+## 11. Izbor finalnog modela i analiza predikcija
 
 Finalni model je eksportovan u `models/final/final_model.joblib`. Prema `data/logs/step10_final_model_selection/final_model_report.csv`, izabran je:
 
@@ -220,7 +266,7 @@ Finalni model je eksportovan u `models/final/final_model.joblib`. Prema `data/lo
 | Final test RMSE | 1.2737 |
 | Final test R2 | 0.8655 |
 
-Model je izabran jer daje jak validacioni rezultat, najbolji test RMSE među poređenim kandidatima, koristi samo 10 atributa i jednostavniji je za tumačenje od Random Forest modela. Praktično ograničenje je da koristi `G1` i `G2`.
+Model je izabran jer daje jak validacioni rezultat, najbolji test RMSE među poređenim kandidatima, koristi samo 10 atributa i jednostavniji je za tumačenje od Random Forest modela. Pri izboru nisu posmatrane samo metrike, već i stabilnost na test skupu, jednostavnost upotrebe i praktična interpretabilnost. Praktično ograničenje je da koristi `G1` i `G2`.
 
 ![Metrike finalnog modela](../data/graphs/step10_final_model_selection/final_model_metrics.png)
 
@@ -236,9 +282,11 @@ Residual graf prikazuje razlike između stvarne i predviđene vrednosti. Residua
 
 MAE od 0.7655 znači da model u proseku greši za manje od jedne ocene. RMSE od 1.2737 pokazuje da postoje pojedinačni slučajevi sa većom greškom, ali ukupno greške ostaju relativno male. R2 od 0.8655 znači da model objašnjava veliki deo varijanse završne ocene na test skupu.
 
-## 11. Deployment modela
+## 12. Deployment modela
 
-Finalni model se nalazi u folderu `models/final/`. Projekat sadrži pomoćne fajlove za korišćenje modela:
+Finalni model se nalazi u folderu `models/final/`. Sačuvan je kao `.joblib` fajl zajedno sa preprocessing pipeline-om i listom atributa koje očekuje. Za novu predikciju korisnik unosi originalne vrednosti atributa, a pipeline interno radi skaliranje i enkodiranje.
+
+Projekat sadrži pomoćne fajlove za korišćenje modela:
 
 - `src/model_usage.py`: učitavanje modela, priprema ulaza i formatiranje predikcije;
 - `src/predict.py`: CLI primer za predikciju;
@@ -264,7 +312,7 @@ streamlit run .\src\streamlit_app.py
 
 Korisnik može uneti vrednosti atributa i dobiti predikciju završne ocene `G3`.
 
-## 12. Diskusija rezultata
+## 13. Diskusija rezultata
 
 Poređenje scenarija sa i bez `G1/G2` pokazuje jasnu razliku. Model sa `G1/G2` je precizniji jer prethodne ocene nose mnogo informacija o završnoj oceni. To potvrđuju i korelacije iz EDA faze: `G2` ima korelaciju 0.92 sa `G3`, a `G1` korelaciju 0.83 sa `G3`.
 
@@ -281,9 +329,9 @@ Glavna ograničenja modela su:
 
 Moguća buduća unapređenja uključuju rad sa većim i raznovrsnijim podacima, dodatne modele, detaljniju validaciju na spoljnim podacima i razvoj posebnog modela za ranu identifikaciju učenika pod rizikom.
 
-## 13. Zaključak
+## 14. Zaključak
 
-U projektu je pripremljen i analiziran dataset `student-por.csv`. Urađeno je početno preprocesiranje, provereni su nedostajuće vrednosti, duplikati i osnovne anomalije, a transformacije su pravilno pomerene u `Pipeline` kako bi se izbegao data leakage.
+U projektu je pripremljen i analiziran dataset `student-por.csv`. Urađeno je početno preprocesiranje, provereni su nedostajuće vrednosti, duplikati i očigledne greške za uklanjanje, a transformacije su pravilno pomerene u `Pipeline` kako bi se izbegao data leakage.
 
 Sprovedena je eksplorativna analiza, trenirano je više modela, izvršeno je poređenje performansi, podešeni su hiperparametri i analizirana je važnost atributa. Posebno su upoređeni scenariji sa i bez `G1/G2`, kao i modeli sa svim atributima i modeli sa najznačajnijim atributima.
 
